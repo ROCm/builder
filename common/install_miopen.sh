@@ -9,6 +9,11 @@ if [[ -z $ROCM_VERSION ]]; then
     exit 1;
 fi
 
+if [[ -z $BUILD_MIOPEN_FROM_SOURCE ]]; then
+    echo "Building MIOpen from source is disabled. Exiting..."
+    exit 0
+fi
+
 # To make version comparison easier, create an integer representation.
 save_IFS="$IFS"
 IFS=. ROCM_VERSION_ARRAY=(${ROCM_VERSION})
@@ -58,7 +63,11 @@ MIOPEN_CMAKE_COMMON_FLAGS="
 -DMIOPEN_BUILD_DRIVER=OFF
 "
 # Pull MIOpen repo and set DMIOPEN_EMBED_DB based on ROCm version
-if [[ $ROCM_INT -ge 50600 ]] && [[ $ROCM_INT -lt 50700 ]]; then
+if [[ $ROCM_INT -ge 60000 ]] && [[ $ROCM_INT -lt 60100 ]]; then
+    MIOPEN_BRANCH="release/rocm-rel-6.0-staging"
+elif [[ $ROCM_INT -ge 50700 ]] && [[ $ROCM_INT -lt 60000 ]]; then
+    MIOPEN_BRANCH="release/rocm-rel-5.7-staging"
+elif [[ $ROCM_INT -ge 50600 ]] && [[ $ROCM_INT -lt 50700 ]]; then
     MIOPEN_BRANCH="release/rocm-rel-5.6-staging"
 elif [[ $ROCM_INT -ge 50500 ]] && [[ $ROCM_INT -lt 50600 ]]; then
     MIOPEN_BRANCH="release/rocm-rel-5.5-gfx11"

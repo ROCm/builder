@@ -169,6 +169,5 @@ RUN bash ./install_rocm_drm.sh && rm install_rocm_drm.sh
 RUN ln -sf /usr/local/bin/cmake /usr/bin/cmake3
 ADD ./common/install_rocm_magma.sh install_rocm_magma.sh
 RUN bash ./install_rocm_magma.sh && rm install_rocm_magma.sh
-# Do not install miopen from source for ROCm fork until an env var is introduced to control the behavior
-#ADD ./common/install_miopen.sh install_miopen.sh
-#RUN bash ./install_miopen.sh ${ROCM_VERSION} && rm install_miopen.sh
+ADD ./common/install_miopen.sh install_miopen.sh
+RUN bash ./install_miopen.sh ${ROCM_VERSION} && rm install_miopen.sh
