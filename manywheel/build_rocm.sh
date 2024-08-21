@@ -189,6 +189,17 @@ do
     OS_SO_FILES[${#OS_SO_FILES[@]}]=$file_name # Append lib to array
 done
 
+# PyTorch-version specific
+# AOTriton dependency only for PyTorch >= 2.3
+# Install AOTriton
+if [ -e ${PYTORCH_ROOT}/.ci/docker/aotriton_version.txt ]; then
+    cp -a ${PYTORCH_ROOT}/.ci/docker/aotriton_version.txt aotriton_version.txt
+    SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+    bash ${SOURCE_DIR}/../common/install_aotriton.sh ${ROCM_HOME} && rm aotriton_version.txt
+    export AOTRITON_INSTALLED_PREFIX=${ROCM_HOME}/aotriton
+    ROCM_SO_FILES+=("libaotriton_v2.so")
+fi
+
 # rocBLAS library files
 if [[ $ROCM_INT -ge 50200 ]]; then
     ROCBLAS_LIB_SRC=$ROCM_HOME/lib/rocblas/library
