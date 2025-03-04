@@ -32,11 +32,8 @@ if [[ -z "$EXTRA_CAFFE2_CMAKE_FLAGS" ]]; then
     EXTRA_CAFFE2_CMAKE_FLAGS=()
 fi
 
-# Exactly one of BUILD_LIGHTWEIGHT or BUILD_HEAVYWEIGHT must be set
-if [[ "$BUILD_LIGHTWEIGHT" == "1" && "$BUILD_HEAVYWEIGHT" == "1" ]]; then
-    echo "Error: Both BUILD_LIGHTWEIGHT and BUILD_HEAVYWEIGHT are set. Choose only one."
-    exit 1
-elif [[ "$BUILD_LIGHTWEIGHT" != "1" && "$BUILD_HEAVYWEIGHT" != "1" ]]; then
+
+elif [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
     echo "Error: Neither BUILD_LIGHTWEIGHT nor BUILD_HEAVYWEIGHT is set. Must set exactly one."
     exit 1
 fi
@@ -145,8 +142,9 @@ fi
 # Select which set of ROCm libraries to use
 if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
     ROCM_SO_FILES=( "${LIGHTWEIGHT_ROCM_SO_FILES[@]}" )
-else
-    # Must be BUILD_HEAVYWEIGHT=1
+fi
+
+if [[ "$BUILD_HEAVYWEIGHT" == "1"]]; then
     ROCM_SO_FILES=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" )
 fi
 
