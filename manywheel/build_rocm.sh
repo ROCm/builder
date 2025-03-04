@@ -176,12 +176,14 @@ if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
             # Dependencies for libsatlas
             LIBGFORTRAN_PATH="/lib64/libgfortran.so.5"
         fi
-        LIBAMD_PATH="/lib64/libamd.so.2"
-        LIBCAMD_PATH="/lib64/libcamd.so.2"
-        LIBCCOLAMD_PATH="/lib64/libccolamd.so.2"
-        LIBCOLAMD_PATH="/lib64/libcolamd.so.2"
-        LIBSATLAS_PATH="/lib64/atlas/libsatlas.so.3"
-        LIBQUADMATH_PATH="/lib64/libquadmath.so.0"
+            # Below libs are direct dependencies of libcholmod
+            LIBAMD_PATH="/lib64/libamd.so.2"
+            LIBCAMD_PATH="/lib64/libcamd.so.2"
+            LIBCCOLAMD_PATH="/lib64/libccolamd.so.2"
+            LIBCOLAMD_PATH="/lib64/libcolamd.so.2"
+            LIBSATLAS_PATH="/lib64/atlas/libsatlas.so.3"
+            # Below libs are direct dependencies of libsatlas
+            LIBQUADMATH_PATH="/lib64/libquadmath.so.0"
     fi
     MAYBE_LIB64=lib64
 elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
