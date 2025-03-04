@@ -66,7 +66,7 @@ if [[ -z "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
 fi
 mkdir -p "$PYTORCH_FINAL_PACKAGE_DIR" || true
 
-# Parse ROCM_VERSION into major.minor.patch and integer form
+# To make version comparison easier, create an integer representation.
 ROCM_VERSION_CLEAN=$(echo "${ROCM_VERSION}" | sed s/rocm//)
 save_IFS="$IFS"
 IFS=. ROCM_VERSION_ARRAY=(${ROCM_VERSION_CLEAN})
@@ -292,7 +292,7 @@ DEPS_SONAME=("${ROCM_SO_FILES[@]}")
 DEPS_AUX_SRCLIST=()
 DEPS_AUX_DSTLIST=()
 
-# If building "lightweight," one might skip many additional dependencies...
+
 if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
 
     # Add OS libraries
@@ -353,9 +353,9 @@ ver() {
     printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
-################################################################################
-# Possibly add Triton install dependency
-################################################################################
+# Add triton install dependency
+# No triton dependency till pytorch 2.3 on 3.12	# Possibly add Triton install dependency
+# since torch.compile doesn't work.
 
 PYTORCH_VERSION=$(cat "$PYTORCH_ROOT/version.txt" | grep -oP "[0-9]+\.[0-9]+\.[0-9]+")
 if [[ "${PYTORCH_VERSION%%.*}" -ge 2 ]]; then
