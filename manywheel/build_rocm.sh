@@ -12,7 +12,7 @@ export MAGMA_HOME="$ROCM_HOME/magma"
 # TODO: libtorch_cpu.so is broken when building with Debug info
 export BUILD_DEBUG_INFO=0
 
-# These are used in PyTorch builds
+# TODO Are these all used/needed?
 export TH_BINARY_BUILD=1
 export USE_STATIC_CUDNN=1
 export USE_STATIC_NCCL=1
@@ -44,7 +44,7 @@ fi
 ################################################################################
 # Determine ROCm version and architectures to build for
 ################################################################################
-
+# NOTE: We should first check `DESIRED_CUDA` when determining `ROCM_VERSION`
 if [[ -n "$DESIRED_CUDA" ]]; then
     if ! echo "${DESIRED_CUDA}" | grep "^rocm" >/dev/null 2>/dev/null; then
         export DESIRED_CUDA="rocm${DESIRED_CUDA}"
@@ -74,7 +74,6 @@ ROCM_VERSION_CLEAN=$(echo "${ROCM_VERSION}" | sed s/rocm//)
 save_IFS="$IFS"
 IFS=. ROCM_VERSION_ARRAY=(${ROCM_VERSION_CLEAN})
 IFS="$save_IFS"
-
 if [[ ${#ROCM_VERSION_ARRAY[@]} == 2 ]]; then
     ROCM_VERSION_MAJOR=${ROCM_VERSION_ARRAY[0]}
     ROCM_VERSION_MINOR=${ROCM_VERSION_ARRAY[1]}
@@ -199,7 +198,9 @@ elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
     LIBDRM_PATH="/usr/lib/x86_64-linux-gnu/libdrm.so.2"
     LIBDRM_AMDGPU_PATH="/usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1"
     if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
+	# Below libs are direct dependencies of libhipsolver
         LIBCHOLMOD_PATH="/lib/x86_64-linux-gnu/libcholmod.so.3"
+	# Below libs are direct dependencies of libcholmod
         LIBSUITESPARSE_CONFIG_PATH="/lib/x86_64-linux-gnu/libsuitesparseconfig.so.5"
         LIBAMD_PATH="/lib/x86_64-linux-gnu/libamd.so.2"
         LIBCAMD_PATH="/lib/x86_64-linux-gnu/libcamd.so.2"
@@ -208,6 +209,7 @@ elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
         LIBMETIS_PATH="/lib/x86_64-linux-gnu/libmetis.so.5"
         LIBLAPACK_PATH="/lib/x86_64-linux-gnu/liblapack.so.3"
         LIBBLAS_PATH="/lib/x86_64-linux-gnu/libblas.so.3"
+	# Below libs are direct dependencies of libblas
         LIBGFORTRAN_PATH="/lib/x86_64-linux-gnu/libgfortran.so.5"
         LIBQUADMATH_PATH="/lib/x86_64-linux-gnu/libquadmath.so.0"
     fi
@@ -326,7 +328,7 @@ if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
     fi
 
     if [[ $ROCM_INT -ge 50600 ]]; then
-        # RCCL shared data files
+        # RCCL library files
         if [[ $ROCM_INT -ge 50700 ]]; then
             RCCL_SHARE_SRC="$ROCM_HOME/share/rccl/msccl-algorithms"
             RCCL_SHARE_DST="share/rccl/msccl-algorithms"
