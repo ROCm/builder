@@ -1,3 +1,4 @@
+
 # Require only one python installation
 if [[ -z "$DESIRED_PYTHON" ]]; then
     echo "Need to set DESIRED_PYTHON env variable"
@@ -266,80 +267,3 @@ if [[ -n "$BUILD_PYTHONLESS" ]]; then
 fi
 
 popd
-
-#######################################################################
-# ADD DEPENDENCIES INTO THE WHEEL
-#
-# auditwheel repair doesn't work correctly and is buggy
-# so manually do the work of copying dependency libs and patchelfing
-# and fixing RECORDS entries correctly
-######################################################################
-
-fname_with_sha256() {
-    HASH=$(sha256sum $1 | cut -c1-8)
-    DIRNAME=$(dirname $1)
-    BASENAME=$(basename $1)
-    # Do not rename nvrtc-builtins.so as they are dynamically loaded
-    # by libnvrtc.so
-    # Similarly don't mangle libcudnn and libcublas library names
-    if [[ $BASENAME == "libnvrtc-builtins.s"* || $BASENAME == "libcudnn"* || $BASENAME == "libcublas"*  ]]; then
-        echo $1
-    else
-        INITNAME=$(echo $BASENAME | cut -f1 -d".")
-        ENDNAME=$(echo $BASENAME | cut -f 2- -d".")
-        echo "$DIRNAME/$INITNAME-$HASH.$ENDNAME"
-    fi
-}
-
-fname_without_so_number() {
-    LINKNAME=$(echo $1 | sed -e 's/\.so.*/.so/g')
-    echo "$LINKNAME"
-}
-
-make_wheel_record() {
-    FPATH=$1
-    if echo $FPATH | grep RECORD >/dev/null 2>&1; then
-        # if the RECORD file, then
-        echo "\"$FPATH\",,"
-    else
-        HASH=$(openssl dgst -sha256 -binary $FPATH | openssl base64 | sed -e 's/+/-/g' | sed -e 's/\//_/g' | sed -e 's/=//g')
-        FSIZE=$(ls -nl $FPATH | awk '{print $5}')
-        echo "\"$FPATH\",sha256=$HASH,$FSIZE"
-    fi
-}
-
-replace_needed_sofiles() {
-    find $1 -name '*.so*' | while read sofile; do
-        origname=$2
-        patchedname=$3
-        if [[ "$origname" != "$patchedname" ]] || [[ "$DESIRED_CUDA" == *"rocm"* ]]; then
-            set +e
-            origname=$($PATCHELF_BIN --print-needed $sofile | grep "$origname.*")
-            ERRCODE=$?
-            set -e
-            if [ "$ERRCODE" -eq "0" ]; then
-                echo "patching $sofile entry $origname to $patchedname"
-                $PATCHELF_BIN --replace-needed $origname $patchedname $sofile
-            fi
-        fi
-    done
-}
-
-echo 'Built this wheel:'
-ls /tmp/$WHEELHOUSE_DIR
-mkdir -p "/$WHEELHOUSE_DIR"
-mv /tmp/$WHEELHOUSE_DIR/torch*linux*.whl /$WHEELHOUSE_DIR/
-
-if [[ "$USE_SPLIT_BUILD" == "true" ]]; then
-    mv /tmp/$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/ || true
-fi
-
-if [[ -n "$BUILD_PYTHONLESS" ]]; then
-    mkdir -p /$LIBTORCH_HOUSE_DIR
-    mv /tmp/$LIBTORCH_HOUSE_DIR/*.zip /$LIBTORCH_HOUSE_DIR
-    rm -rf /tmp/$LIBTORCH_HOUSE_DIR
-fi
-rm -rf /tmp/$WHEELHOUSE_DIR
-rm -rf /tmp_dir
-mkdir /tmp_dir
-pushd /tmp_dir
