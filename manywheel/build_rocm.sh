@@ -2,9 +2,6 @@
 
 set -ex
 
-################################################################################
-# Environment variables and initial checks
-################################################################################
 
 export ROCM_HOME=/opt/rocm
 export MAGMA_HOME="$ROCM_HOME/magma"
@@ -18,17 +15,17 @@ export USE_STATIC_CUDNN=1
 export USE_STATIC_NCCL=1
 export ATEN_STATIC_CUDA=1
 export USE_CUDA_STATIC_LINK=1
-export INSTALL_TEST=0  # don't install test binaries into site-packages
+export INSTALL_TEST=0  # dont install test binaries into site-packages
 # Set RPATH instead of RUNPATH when using patchelf to avoid LD_LIBRARY_PATH override
 export FORCE_RPATH="--force-rpath"
 
 # Keep an array of cmake variables to add to
 if [[ -z "$CMAKE_ARGS" ]]; then
-    # Passed to tools/build_pytorch_libs.sh::build()
+    # These are passed to tools/build_pytorch_libs.sh::build()
     CMAKE_ARGS=()
 fi
 if [[ -z "$EXTRA_CAFFE2_CMAKE_FLAGS" ]]; then
-    # Passed to tools/build_pytorch_libs.sh::build_caffe2()
+    # These are passed to tools/build_pytorch_libs.sh::build_caffe2()
     EXTRA_CAFFE2_CMAKE_FLAGS=()
 fi
 
@@ -38,15 +35,14 @@ elif [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
     exit 1
 fi
 
-################################################################################
 # Determine ROCm version and architectures to build for
-################################################################################
+#
 # NOTE: We should first check `DESIRED_CUDA` when determining `ROCM_VERSION`
 if [[ -n "$DESIRED_CUDA" ]]; then
-    if ! echo "${DESIRED_CUDA}" | grep "^rocm" >/dev/null 2>/dev/null; then
+    if ! echo "${DESIRED_CUDA}"| grep "^rocm" >/dev/null 2>/dev/null; then
         export DESIRED_CUDA="rocm${DESIRED_CUDA}"
     fi
-    # e.g., rocm3.7, rocm3.5.1
+    # rocm3.7, rocm3.5.1
     ROCM_VERSION="$DESIRED_CUDA"
     echo "Using $ROCM_VERSION as determined by DESIRED_CUDA"
 else
@@ -67,7 +63,7 @@ fi
 mkdir -p "$PYTORCH_FINAL_PACKAGE_DIR" || true
 
 # To make version comparison easier, create an integer representation.
-ROCM_VERSION_CLEAN=$(echo "${ROCM_VERSION}" | sed s/rocm//)
+ROCM_VERSION_CLEAN=$(echo ${ROCM_VERSION} | sed s/rocm//)
 save_IFS="$IFS"
 IFS=. ROCM_VERSION_ARRAY=(${ROCM_VERSION_CLEAN})
 IFS="$save_IFS"
@@ -87,10 +83,7 @@ fi
 ROCM_VERSION_WITH_PATCH="rocm${ROCM_VERSION_MAJOR}.${ROCM_VERSION_MINOR}.${ROCM_VERSION_PATCH}"
 ROCM_INT=$((ROCM_VERSION_MAJOR * 10000 + ROCM_VERSION_MINOR * 100 + ROCM_VERSION_PATCH))
 
-################################################################################
-# Define LIGHTWEIGHT vs HEAVYWEIGHT ROCm .so libraries
-################################################################################
-
+# Required ROCm libraries
 LIGHTWEIGHT_ROCM_SO_FILES=(
     # Minimal set for lightweight
     "libmagma.so"
@@ -165,15 +158,15 @@ if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
     LIBDRM_PATH="/opt/amdgpu/lib64/libdrm.so.2"
     LIBDRM_AMDGPU_PATH="/opt/amdgpu/lib64/libdrm_amdgpu.so.1"
     if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
-        # Dependencies for libhipsolver
+        # Below libs are direct dependencies of libhipsolver
         LIBSUITESPARSE_CONFIG_PATH="/lib64/libsuitesparseconfig.so.4"
         if [[ "$OS_NAME" == *"CentOS Linux"* ]]; then
             LIBCHOLMOD_PATH="/lib64/libcholmod.so.2"
-            # Dependencies for libsatlas
+            # Below libs are direct dependencies of libsatlas
             LIBGFORTRAN_PATH="/lib64/libgfortran.so.3"
         else
             LIBCHOLMOD_PATH="/lib64/libcholmod.so.3"
-            # Dependencies for libsatlas
+            # Below libs are direct dependencies of libsatlas
             LIBGFORTRAN_PATH="/lib64/libgfortran.so.5"
         fi
             # Below libs are direct dependencies of libcholmod
@@ -198,9 +191,9 @@ elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
     LIBDRM_PATH="/usr/lib/x86_64-linux-gnu/libdrm.so.2"
     LIBDRM_AMDGPU_PATH="/usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1"
     if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
-	# Below libs are direct dependencies of libhipsolver
+        # Below libs are direct dependencies of libhipsolver
         LIBCHOLMOD_PATH="/lib/x86_64-linux-gnu/libcholmod.so.3"
-	# Below libs are direct dependencies of libcholmod
+        # Below libs are direct dependencies of libcholmod
         LIBSUITESPARSE_CONFIG_PATH="/lib/x86_64-linux-gnu/libsuitesparseconfig.so.5"
         LIBAMD_PATH="/lib/x86_64-linux-gnu/libamd.so.2"
         LIBCAMD_PATH="/lib/x86_64-linux-gnu/libcamd.so.2"
@@ -209,7 +202,7 @@ elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
         LIBMETIS_PATH="/lib/x86_64-linux-gnu/libmetis.so.5"
         LIBLAPACK_PATH="/lib/x86_64-linux-gnu/liblapack.so.3"
         LIBBLAS_PATH="/lib/x86_64-linux-gnu/libblas.so.3"
-	# Below libs are direct dependencies of libblas
+        # Below libs are direct dependencies of libblas
         LIBGFORTRAN_PATH="/lib/x86_64-linux-gnu/libgfortran.so.5"
         LIBQUADMATH_PATH="/lib/x86_64-linux-gnu/libquadmath.so.0"
     fi
@@ -231,10 +224,8 @@ for lib in "${OS_SO_PATHS[@]}"; do
     OS_SO_FILES+=("$file_name")
 done
 
-################################################################################
-# rocBLAS library files (for copying arch-specific libs)
-################################################################################
 
+# rocBLAS library files
 if [[ $ROCM_INT -ge 50200 ]]; then
     ROCBLAS_LIB_SRC="$ROCM_HOME/lib/rocblas/library"
     ROCBLAS_LIB_DST="lib/rocblas/library"
@@ -248,10 +239,7 @@ ARCH_SPECIFIC_FILES=$(ls "$ROCBLAS_LIB_SRC" | grep -E "$ARCH" || true)
 OTHER_FILES=$(ls "$ROCBLAS_LIB_SRC" | grep -v gfx || true)
 ROCBLAS_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
 
-################################################################################
-# hipBLASLt library files
-################################################################################
-
+# hipblaslt library files
 HIPBLASLT_LIB_SRC="$ROCM_HOME/lib/hipblaslt/library"
 HIPBLASLT_LIB_DST="lib/hipblaslt/library"
 if [[ -d "$HIPBLASLT_LIB_SRC" ]]; then
@@ -267,20 +255,22 @@ fi
 # Then find them on the filesystem
 ################################################################################
 
-ROCM_SO_PATHS=()
-for lib in "${ROCM_SO_FILES[@]}"; do
-    file_path=($(find "$ROCM_HOME/lib/" -name "$lib"))
-    if [[ -z $file_path && -d "$ROCM_HOME/lib64/" ]]; then
-        file_path=($(find "$ROCM_HOME/lib64/" -name "$lib"))
+for lib in "${ROCM_SO_FILES[@]}"
+do
+    file_path=($(find $ROCM_HOME/lib/ -name "$lib")) # First search in lib
+    if [[ -z $file_path ]]; then
+        if [ -d "$ROCM_HOME/lib64/" ]; then
+            file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
+        fi
     fi
     if [[ -z $file_path ]]; then
-        file_path=($(find "$ROCM_HOME/" -name "$lib"))
+        file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
     fi
     if [[ -z $file_path ]]; then
         echo "Error: Library file $lib is not found." >&2
         exit 1
     fi
-    ROCM_SO_PATHS+=("$file_path")
+    ROCM_SO_PATHS[${#ROCM_SO_PATHS[@]}]="$file_path" # Append lib to array
 done
 
 ################################################################################
@@ -384,18 +374,13 @@ if [[ "${PYTORCH_VERSION%%.*}" -ge 2 ]]; then
     fi
 fi
 
-################################################################################
-# Final: print arch and source the main build script
-################################################################################
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-
 if [[ -z "$BUILD_PYTHONLESS" ]]; then
-    BUILD_SCRIPT="build_common.sh"
+    BUILD_SCRIPT=build_common.sh
 else
-    BUILD_SCRIPT="build_libtorch.sh"
+    BUILD_SCRIPT=build_libtorch.sh
 fi
-
 source "$SCRIPTPATH/$BUILD_SCRIPT"
