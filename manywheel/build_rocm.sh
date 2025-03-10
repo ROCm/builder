@@ -2,10 +2,8 @@
 
 set -ex
 
-
 export ROCM_HOME=/opt/rocm
-export MAGMA_HOME="$ROCM_HOME/magma"
-
+export MAGMA_HOME=$ROCM_HOME/magma
 # TODO: libtorch_cpu.so is broken when building with Debug info
 export BUILD_DEBUG_INFO=0
 
@@ -15,7 +13,7 @@ export USE_STATIC_CUDNN=1
 export USE_STATIC_NCCL=1
 export ATEN_STATIC_CUDA=1
 export USE_CUDA_STATIC_LINK=1
-export INSTALL_TEST=0  # dont install test binaries into site-packages
+export INSTALL_TEST=0 # dont install test binaries into site-packages
 # Set RPATH instead of RUNPATH when using patchelf to avoid LD_LIBRARY_PATH override
 export FORCE_RPATH="--force-rpath"
 
@@ -383,4 +381,4 @@ if [[ -z "$BUILD_PYTHONLESS" ]]; then
 else
     BUILD_SCRIPT=build_libtorch.sh
 fi
-source "$SCRIPTPATH/$BUILD_SCRIPT"
+source $SCRIPTPATH/${BUILD_SCRIPT}
