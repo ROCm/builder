@@ -111,18 +111,6 @@ HEAVYWEIGHT_ROCM_SO_FILES=(
 )
 
 # Adjust list based on ROCm version
-if [[ $ROCM_INT -ge 50600 ]]; then
-    HEAVYWEIGHT_ROCM_SO_FILES+=("libhipblaslt.so")
-fi
-if [[ $ROCM_INT -lt 50500 ]]; then
-    HEAVYWEIGHT_ROCM_SO_FILES+=("librocfft-device-0.so")
-    HEAVYWEIGHT_ROCM_SO_FILES+=("librocfft-device-1.so")
-    HEAVYWEIGHT_ROCM_SO_FILES+=("librocfft-device-2.so")
-    HEAVYWEIGHT_ROCM_SO_FILES+=("librocfft-device-3.so")
-fi
-if [[ $ROCM_INT -ge 50400 ]]; then
-    HEAVYWEIGHT_ROCM_SO_FILES+=("libhiprtc.so")
-fi
 if [[ $ROCM_INT -ge 60100 ]]; then
     HEAVYWEIGHT_ROCM_SO_FILES+=("librocprofiler-register.so")
 fi
