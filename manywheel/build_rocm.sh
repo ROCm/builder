@@ -191,20 +191,23 @@ elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
     fi
     MAYBE_LIB64=lib
 fi
-
-# Convert them to "OS_SO_FILES" array for convenience
-OS_SO_PATHS=(
-    "$LIBGOMP_PATH" "$LIBNUMA_PATH" "$LIBELF_PATH" "$LIBTINFO_PATH"
-    "$LIBDRM_PATH" "$LIBDRM_AMDGPU_PATH" "$LIBSUITESPARSE_CONFIG_PATH"
-    "$LIBCHOLMOD_PATH" "$LIBAMD_PATH" "$LIBCAMD_PATH" "$LIBCCOLAMD_PATH"
-    "$LIBCOLAMD_PATH" "$LIBSATLAS_PATH" "$LIBGFORTRAN_PATH"
-    "$LIBQUADMATH_PATH" "$LIBMETIS_PATH" "$LIBLAPACK_PATH" "$LIBBLAS_PATH"
-)
+OS_SO_PATHS=($LIBGOMP_PATH $LIBNUMA_PATH\
+             $LIBELF_PATH $LIBTINFO_PATH\
+             $LIBDRM_PATH $LIBDRM_AMDGPU_PATH\
+             $LIBSUITESPARSE_CONFIG_PATH\
+             $LIBCHOLMOD_PATH $LIBAMD_PATH\
+             $LIBCAMD_PATH $LIBCCOLAMD_PATH\
+             $LIBCOLAMD_PATH $LIBSATLAS_PATH\
+             $LIBGFORTRAN_PATH $LIBQUADMATH_PATH\
+             $LIBMETIS_PATH $LIBLAPACK_PATH\
+             $LIBBLAS_PATH)
+OS_SO_FILES=()
 
 OS_SO_FILES=()
-for lib in "${OS_SO_PATHS[@]}"; do
-    file_name="${lib##*/}"  # strip path to get filename
-    OS_SO_FILES+=("$file_name")
+for lib in "${OS_SO_PATHS[@]}"
+do
+    file_name="${lib##*/}" # Substring removal of path to get filename
+    OS_SO_FILES[${#OS_SO_FILES[@]}]=$file_name # Append lib to array
 done
 
 
@@ -243,10 +246,8 @@ done
 
 DEPS_LIST=(${ROCM_SO_PATHS[@]})
 DEPS_SONAME=(${ROCM_SO_FILES[@]})
-
 DEPS_AUX_SRCLIST=()
 DEPS_AUX_DSTLIST=()
-
 
 if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
 
