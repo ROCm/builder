@@ -127,9 +127,6 @@ if [[ "$BUILD_HEAVYWEIGHT" == "1"]]; then
     ROCM_SO_FILES=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" )
 fi
 
-################################################################################
-# Detect OS and define OS-level libraries
-################################################################################
 
 OS_NAME="$(awk -F= '/^NAME/{print $2}' /etc/os-release)"
 if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
@@ -212,34 +209,19 @@ done
 
 
 # rocBLAS library files
-if [[ $ROCM_INT -ge 50200 ]]; then
-    ROCBLAS_LIB_SRC="$ROCM_HOME/lib/rocblas/library"
-    ROCBLAS_LIB_DST="lib/rocblas/library"
-else
-    ROCBLAS_LIB_SRC="$ROCM_HOME/rocblas/lib/library"
-    ROCBLAS_LIB_DST="lib/library"
-fi
-
-ARCH=$(echo "$PYTORCH_ROCM_ARCH" | sed 's/;/|/g')  # e.g. gfx906;gfx908 => "gfx906|gfx908"
-ARCH_SPECIFIC_FILES=$(ls "$ROCBLAS_LIB_SRC" | grep -E "$ARCH" || true)
-OTHER_FILES=$(ls "$ROCBLAS_LIB_SRC" | grep -v gfx || true)
+ROCBLAS_LIB_SRC=$ROCM_HOME/lib/rocblas/library
+ROCBLAS_LIB_DST=lib/rocblas/library
+ARCH=$(echo $PYTORCH_ROCM_ARCH | sed 's/;/|/g') # Replace ; seperated arch list to bar for grep
+ARCH_SPECIFIC_FILES=$(ls $ROCBLAS_LIB_SRC | grep -E $ARCH)
+OTHER_FILES=$(ls $ROCBLAS_LIB_SRC | grep -v gfx)
 ROCBLAS_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
 
 # hipblaslt library files
-HIPBLASLT_LIB_SRC="$ROCM_HOME/lib/hipblaslt/library"
-HIPBLASLT_LIB_DST="lib/hipblaslt/library"
-if [[ -d "$HIPBLASLT_LIB_SRC" ]]; then
-    HIPBLASLT_ARCH_SPECIFIC_FILES=$(ls "$HIPBLASLT_LIB_SRC" | grep -E "$ARCH" || true)
-    HIPBLASLT_OTHER_FILES=$(ls "$HIPBLASLT_LIB_SRC" | grep -v gfx || true)
-    HIPBLASLT_LIB_FILES=($HIPBLASLT_ARCH_SPECIFIC_FILES $HIPBLASLT_OTHER_FILES)
-else
-    HIPBLASLT_LIB_FILES=()
-fi
-
-################################################################################
-# Build final list of ROCm shared libraries (ROCM_SO_FILES were chosen above)
-# Then find them on the filesystem
-################################################################################
+HIPBLASLT_LIB_SRC=$ROCM_HOME/lib/hipblaslt/library
+HIPBLASLT_LIB_DST=lib/hipblaslt/library
+ARCH_SPECIFIC_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -E $ARCH)
+OTHER_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -v gfx)
+HIPBLASLT_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
 
 for lib in "${ROCM_SO_FILES[@]}"
 do
@@ -259,13 +241,8 @@ do
     ROCM_SO_PATHS[${#ROCM_SO_PATHS[@]}]="$file_path" # Append lib to array
 done
 
-################################################################################
-# Build DEPS lists (the dynamic libraries we want to package).
-# If BUILD_LIGHTWEIGHT=1, we typically exclude OS libs to keep minimal, etc.
-################################################################################
-
-DEPS_LIST=("${ROCM_SO_PATHS[@]}")
-DEPS_SONAME=("${ROCM_SO_FILES[@]}")
+DEPS_LIST=(${ROCM_SO_PATHS[@]})
+DEPS_SONAME=(${ROCM_SO_FILES[@]})
 
 DEPS_AUX_SRCLIST=()
 DEPS_AUX_DSTLIST=()
@@ -274,52 +251,25 @@ DEPS_AUX_DSTLIST=()
 if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
 
     # Add OS libraries
-    DEPS_LIST+=("${OS_SO_PATHS[@]}")
-    DEPS_SONAME+=("${OS_SO_FILES[@]}")
+    DEPS_LIST=(
+        ${ROCM_SO_PATHS[*]}
+        ${OS_SO_PATHS[*]}
+    )
+    DEPS_SONAME=(
+        ${ROCM_SO_FILES[*]}
+        ${OS_SO_FILES[*]}
+    )
+    DEPS_AUX_SRCLIST=(
+        "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}"
+        "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}"
+        "/opt/amdgpu/share/libdrm/amdgpu.ids"
+    )
 
-    # Add rocblas library files
-    for f in "${ROCBLAS_LIB_FILES[@]}"; do
-        DEPS_AUX_SRCLIST+=("$ROCBLAS_LIB_SRC/$f")
-        DEPS_AUX_DSTLIST+=("$ROCBLAS_LIB_DST/$f")
-    done
-
-    # Add hipblaslt library files (if any exist)
-    for f in "${HIPBLASLT_LIB_FILES[@]}"; do
-        DEPS_AUX_SRCLIST+=("$HIPBLASLT_LIB_SRC/$f")
-        DEPS_AUX_DSTLIST+=("$HIPBLASLT_LIB_DST/$f")
-    done
-
-    # Some additional logic for MIOpen, RCCL, etc. based on ROCm versions
-    if [[ $ROCM_INT -ge 50500 ]]; then
-        # MIOpen shared data files
-        MIOPEN_SHARE_SRC="$ROCM_HOME/share/miopen/db"
-        MIOPEN_SHARE_DST="share/miopen/db"
-        if [[ -d "$MIOPEN_SHARE_SRC" ]]; then
-            MIOPEN_SHARE_FILES=($(ls "$MIOPEN_SHARE_SRC"))
-            for f in "${MIOPEN_SHARE_FILES[@]}"; do
-                DEPS_AUX_SRCLIST+=("$MIOPEN_SHARE_SRC/$f")
-                DEPS_AUX_DSTLIST+=("$MIOPEN_SHARE_DST/$f")
-            done
-        fi
-    fi
-
-    if [[ $ROCM_INT -ge 50600 ]]; then
-        # RCCL library files
-        if [[ $ROCM_INT -ge 50700 ]]; then
-            RCCL_SHARE_SRC="$ROCM_HOME/share/rccl/msccl-algorithms"
-            RCCL_SHARE_DST="share/rccl/msccl-algorithms"
-        else
-            RCCL_SHARE_SRC="$ROCM_HOME/lib/msccl-algorithms"
-            RCCL_SHARE_DST="lib/msccl-algorithms"
-        fi
-        if [[ -d "$RCCL_SHARE_SRC" ]]; then
-            RCCL_SHARE_FILES=($(ls "$RCCL_SHARE_SRC"))
-            for f in "${RCCL_SHARE_FILES[@]}"; do
-                DEPS_AUX_SRCLIST+=("$RCCL_SHARE_SRC/$f")
-                DEPS_AUX_DSTLIST+=("$RCCL_SHARE_DST/$f")
-            done
-        fi
-    fi
+    DEPS_AUX_DSTLIST=(
+        "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}"
+        "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}"
+        "share/libdrm/amdgpu.ids"
+    )
 fi
 
 ################################################################################
@@ -332,25 +282,21 @@ ver() {
 }
 
 # Add triton install dependency
-# No triton dependency till pytorch 2.3 on 3.12	# Possibly add Triton install dependency
+# No triton dependency till pytorch 2.3 on 3.12
 # since torch.compile doesn't work.
-
-PYTORCH_VERSION=$(cat "$PYTORCH_ROOT/version.txt" | grep -oP "[0-9]+\.[0-9]+\.[0-9]+")
-if [[ "${PYTORCH_VERSION%%.*}" -ge 2 ]]; then
-    # e.g., for PyTorch 2.x
-    if [[ $(uname) == "Linux" ]] && [[ "$DESIRED_PYTHON" != "3.12" || $(ver "$PYTORCH_VERSION") -ge $(ver 2.4) ]]; then
-        # For PyTorch 2.5 and above, unify the Triton commit
-        if [[ $(ver "$PYTORCH_VERSION") -ge $(ver 2.5) ]]; then
-            TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton.txt")
-        else
-            TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt")
-        fi
-        TRITON_VERSION=$(cat "$PYTORCH_ROOT/.ci/docker/triton_version.txt")
-        TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'"
-        if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then
-            # Restrict to python < 3.13 for older versions
-            TRITON_CONSTRAINT="${TRITON_CONSTRAINT} and python_version < '3.13'"
-        fi
+PYTORCH_VERSION=$(cat $PYTORCH_ROOT/version.txt | grep -oP "[0-9]+\.[0-9]+\.[0-9]+")
+# Assuming PYTORCH_VERSION=x.y.z, if x >= 2
+if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
+    if [[ $(uname) == "Linux" ]] && [[ "$DESIRED_PYTHON" != "3.12" || $(ver $PYTORCH_VERSION) -ge $(ver 2.4) ]]; then
+	# Triton commit got unified in PyTorch 2.5
+	if [[ $(ver $PYTORCH_VERSION) -ge $(ver 2.5) ]]; then
+            TRITON_SHORTHASH=$(cut -c1-8 $PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton.txt)
+	else
+            TRITON_SHORTHASH=$(cut -c1-8 $PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt)
+	fi
+        TRITON_VERSION=$(cat $PYTORCH_ROOT/.ci/docker/triton_version.txt)
+	# Only linux Python < 3.13 are supported wheels for triton
+	TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
 
         if [[ -z "$PYTORCH_EXTRA_INSTALL_REQUIREMENTS" ]]; then
             export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="pytorch-triton-rocm==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
