@@ -28,7 +28,7 @@ if [[ -z "$EXTRA_CAFFE2_CMAKE_FLAGS" ]]; then
 fi
 
 
-elif [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
+if [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
     echo "Error: Neither BUILD_LIGHTWEIGHT nor BUILD_HEAVYWEIGHT is set. Must set exactly one."
     exit 1
 fi
@@ -92,11 +92,13 @@ HEAVYWEIGHT_ROCM_SO_FILES=(
     "libMIOpen.so"
     "libamdhip64.so"
     "libhipblas.so"
+    "libhipblaslt.so"
     "libhipfft.so"
     "libhiprand.so"
     "libhipsolver.so"
     "libhipsparse.so"
     "libhsa-runtime64.so"
+    "libhiprtc.so"
     "libamd_comgr.so"
     "libmagma.so"
     "librccl.so"
@@ -128,7 +130,7 @@ if [[ "$BUILD_HEAVYWEIGHT" == "1"]]; then
 fi
 
 
-OS_NAME="$(awk -F= '/^NAME/{print $2}' /etc/os-release)"
+OS_NAME="(awk -F= '/^NAME/{print $2}' /etc/os-release)"
 if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
     LIBGOMP_PATH="/usr/lib64/libgomp.so.1"
     LIBNUMA_PATH="/usr/lib64/libnuma.so.1"
@@ -203,13 +205,11 @@ OS_SO_PATHS=($LIBGOMP_PATH $LIBNUMA_PATH\
              $LIBBLAS_PATH)
 OS_SO_FILES=()
 
-OS_SO_FILES=()
 for lib in "${OS_SO_PATHS[@]}"
 do
     file_name="${lib##*/}" # Substring removal of path to get filename
     OS_SO_FILES[${#OS_SO_FILES[@]}]=$file_name # Append lib to array
 done
-
 
 # rocBLAS library files
 ROCBLAS_LIB_SRC=$ROCM_HOME/lib/rocblas/library
@@ -225,6 +225,15 @@ HIPBLASLT_LIB_DST=lib/hipblaslt/library
 ARCH_SPECIFIC_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -E $ARCH)
 OTHER_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -v gfx)
 HIPBLASLT_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
+
+# ROCm library files
+# Overwrite ROCM_SO_FILES to contain only libmagma.so if BUILD_LIGHTWEIGHT is enabled
+if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
+    ROCM_SO_FILES=(
+        "libmagma.so"
+    )
+fi
+ROCM_SO_PATHS=()
 
 for lib in "${ROCM_SO_FILES[@]}"
 do
