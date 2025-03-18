@@ -229,58 +229,100 @@ HIPBLASLT_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
 # ROCm library files
 # Overwrite ROCM_SO_FILES to contain only libmagma.so if BUILD_LIGHTWEIGHT is enabled
 if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
-    ROCM_SO_FILES=(
+    LIGHTWEIGHT_ROCM_SO_FILES=(
         "libmagma.so"
     )
 fi
-ROCM_SO_PATHS=()
 
-for lib in "${ROCM_SO_FILES[@]}"
-do
-    file_path=($(find $ROCM_HOME/lib/ -name "$lib")) # First search in lib
-    if [[ -z $file_path ]]; then
-        if [ -d "$ROCM_HOME/lib64/" ]; then
-            file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
+do_lightweight_build() {
+    echo "=== Building LIGHTWEIGHT variant ==="
+
+    # First, gather actual file paths for the minimal set
+    ROCM_SO_PATHS_LIGHTWEIGHT=()
+    for lib in "${LIGHTWEIGHT_ROCM_SO_FILES[@]}"; do
+        file_path="$(find "$ROCM_HOME/lib" -name "$lib" 2>/dev/null | head -n1)"
+        if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
+            file_path="$(find "$ROCM_HOME/lib64" -name "$lib" 2>/dev/null | head -n1)"
         fi
-    fi
-    if [[ -z $file_path ]]; then
-        file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
-    fi
-    if [[ -z $file_path ]]; then
-        echo "Error: Library file $lib is not found." >&2
-        exit 1
-    fi
-    ROCM_SO_PATHS[${#ROCM_SO_PATHS[@]}]="$file_path" # Append lib to array
-done
+        if [[ -z $file_path ]]; then
+            file_path="$(find "$ROCM_HOME" -name "$lib" 2>/dev/null | head -n1)"
+        fi
+        if [[ -z $file_path ]]; then
+            echo "Error: Lightweight library $lib is not found." >&2
+            exit 1
+        fi
+        ROCM_SO_PATHS_LIGHTWEIGHT+=("$file_path")
+    done
 
-DEPS_LIST=(${ROCM_SO_PATHS[@]})
-DEPS_SONAME=(${ROCM_SO_FILES[@]})
-DEPS_AUX_SRCLIST=()
-DEPS_AUX_DSTLIST=()
+    # Set environment so build_common.sh (or build_libtorch.sh) sees it
+    DEPS_LIST=( "${ROCM_SO_PATHS_LIGHTWEIGHT[@]}" )
+    DEPS_SONAME=( "${LIGHTWEIGHT_ROCM_SO_FILES[@]}" )
+    DEPS_AUX_SRCLIST=()
+    DEPS_AUX_DSTLIST=()
 
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
+    # Because original script doesn't add OS libraries or arch-specific .co
+    # files for "lightweight", we skip them here
+
+    # Finally, source the main build script
+    SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+    if [[ -z "$BUILD_PYTHONLESS" ]]; then
+        BUILD_SCRIPT=build_common.sh
+    else
+        BUILD_SCRIPT=build_libtorch.sh
+    fi
+    source "$SCRIPTPATH/${BUILD_SCRIPT}"
+
+    echo "=== Done building LIGHTWEIGHT variant ==="
+}
+
+# 2) HEAVYWEIGHT BUILD
+do_heavyweight_build() {
+    echo "=== Building HEAVYWEIGHT variant ==="
+
+    # Gather file paths for the full set
+    ROCM_SO_PATHS_HEAVYWEIGHT=()
+    for lib in "${HEAVYWEIGHT_ROCM_SO_FILES[@]}"; do
+        file_path="$(find "$ROCM_HOME/lib" -name "$lib" 2>/dev/null | head -n1)"
+        if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
+            file_path="$(find "$ROCM_HOME/lib64" -name "$lib" 2>/dev/null | head -n1)"
+        fi
+        if [[ -z $file_path ]]; then
+            file_path="$(find "$ROCM_HOME" -name "$lib" 2>/dev/null | head -n1)"
+        fi
+        if [[ -z $file_path ]]; then
+            echo "Error: Heavyweight library $lib not found." >&2
+            exit 1
+        fi
+        ROCM_SO_PATHS_HEAVYWEIGHT+=("$file_path")
+    done
 
     # Add OS libraries
-    DEPS_LIST=(
-        ${ROCM_SO_PATHS[*]}
-        ${OS_SO_PATHS[*]}
-    )
-    DEPS_SONAME=(
-        ${ROCM_SO_FILES[*]}
-        ${OS_SO_FILES[*]}
-    )
+    DEPS_LIST=( "${ROCM_SO_PATHS_HEAVYWEIGHT[@]}" "${OS_SO_PATHS[@]}" )
+    DEPS_SONAME=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" "${OS_SO_FILES[@]}" )
+
+    # Add architecture-specific files
     DEPS_AUX_SRCLIST=(
         "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}"
         "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}"
         "/opt/amdgpu/share/libdrm/amdgpu.ids"
     )
-
     DEPS_AUX_DSTLIST=(
         "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}"
         "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}"
         "share/libdrm/amdgpu.ids"
     )
-fi
+
+    # Finally, source the main build script
+    SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+    if [[ -z "$BUILD_PYTHONLESS" ]]; then
+        BUILD_SCRIPT=build_common.sh
+    else
+        BUILD_SCRIPT=build_libtorch.sh
+    fi
+    source "$SCRIPTPATH/${BUILD_SCRIPT}"
+
+    echo "=== Done building HEAVYWEIGHT variant ==="
+}
 
 ################################################################################
 # Helper for version comparison
@@ -319,10 +361,11 @@ fi
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-if [[ -z "$BUILD_PYTHONLESS" ]]; then
-    BUILD_SCRIPT=build_common.sh
-else
-    BUILD_SCRIPT=build_libtorch.sh
+if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
+    do_lightweight_build
 fi
-source $SCRIPTPATH/${BUILD_SCRIPT}
+
+if [[ "$BUILD_HEAVYWEIGHT" == "1" ]]; then
+    do_heavyweight_build
+fi
+
