@@ -358,6 +358,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 if [[ -z "$BUILD_PYTHONLESS" ]]; then
     BUILD_SCRIPT=build_torch_wheel.sh	
 fi
+source $SCRIPTPATH/${BUILD_SCRIPT}
 if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
     do_lightweight_build
 fi
