@@ -119,7 +119,7 @@ if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
     ROCM_SO_FILES=( "${LIGHTWEIGHT_ROCM_SO_FILES[@]}" )
 fi
 
-if [[ "$BUILD_HEAVYWEIGHT" == "1"]]; then
+if [[ "$BUILD_HEAVYWEIGHT" == "1" ]]; then
     ROCM_SO_FILES=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" )
 fi
 
