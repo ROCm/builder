@@ -360,6 +360,9 @@ fi
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
+if [[ -z "$BUILD_PYTHONLESS" ]]; then
+    BUILD_SCRIPT=build_torch_wheel.sh	
+fi
 if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
     do_lightweight_build
 fi
