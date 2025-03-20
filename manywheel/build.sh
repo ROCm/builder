@@ -13,7 +13,6 @@ case "${GPU_ARCH_TYPE:-BLANK}" in
         bash "${SCRIPTPATH}/build_cuda.sh"
         ;;
     rocm)
-        bash "${SCRIPTPATH}/build_torch_wheel.sh"
         bash "${SCRIPTPATH}/build_rocm.sh"
         ;;
     cpu | cpu-cxx11-abi | cpu-s390x | xpu)
