@@ -29,7 +29,7 @@ fi
 
 
 if [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
-    echo "Error: Neither BUILD_LIGHTWEIGHT nor BUILD_HEAVYWEIGHT is set. Must set exactly one."
+    echo "Error: Neither BUILD_LIGHTWEIGHT nor BUILD_HEAVYWEIGHT is set. Must set one."
     exit 1
 fi
 
