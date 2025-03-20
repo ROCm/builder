@@ -248,8 +248,8 @@ do_lightweight_build() {
     done
 
     # Set environment so build_common.sh (or build_libtorch.sh) sees it
-    DEPS_LIST=( "${ROCM_SO_PATHS_LIGHTWEIGHT[@]}" )
-    DEPS_SONAME=( "${LIGHTWEIGHT_ROCM_SO_FILES[@]}" )
+    DEPS_LIST=( "${ROCM_SO_PATHS_LIGHTWEIGHT[*}" )
+    DEPS_SONAME=( "${LIGHTWEIGHT_ROCM_SO_FILES[*]}" )
     DEPS_AUX_SRCLIST=()
     DEPS_AUX_DSTLIST=()
 
@@ -290,8 +290,8 @@ do_heavyweight_build() {
     done
 
     # Add OS libraries
-    DEPS_LIST=( "${ROCM_SO_PATHS_HEAVYWEIGHT[@]}" "${OS_SO_PATHS[@]}" )
-    DEPS_SONAME=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" "${OS_SO_FILES[@]}" )
+    DEPS_LIST=( "${ROCM_SO_PATHS_HEAVYWEIGHT[@]}" "${OS_SO_PATHS[*]}" )
+    DEPS_SONAME=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" "${OS_SO_FILES[*]}" )
 
     # Add architecture-specific files
     DEPS_AUX_SRCLIST=(
