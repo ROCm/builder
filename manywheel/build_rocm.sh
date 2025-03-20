@@ -27,12 +27,6 @@ if [[ -z "$EXTRA_CAFFE2_CMAKE_FLAGS" ]]; then
     EXTRA_CAFFE2_CMAKE_FLAGS=()
 fi
 
-
-if [[ !"$BUILD_LIGHTWEIGHT" && !"$BUILD_HEAVYWEIGHT"]]; then
-    echo "Error: Neither BUILD_LIGHTWEIGHT nor BUILD_HEAVYWEIGHT is set. Must set one."
-    exit 1
-fi
-
 # Determine ROCm version and architectures to build for
 #
 # NOTE: We should first check `DESIRED_CUDA` when determining `ROCM_VERSION`
