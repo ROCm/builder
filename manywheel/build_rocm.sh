@@ -53,9 +53,9 @@ WHEELHOUSE_DIR="wheelhouse$ROCM_VERSION"
 LIBTORCH_HOUSE_DIR="libtorch_house$ROCM_VERSION"
 if [[ -z "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
     if [[ -z "$BUILD_PYTHONLESS" ]]; then
-        PYTORCH_FINAL_PACKAGE_DIR="/remote/$WHEELHOUSE_DIR"
+        PYTORCH_FINAL_PACKAGE_DIR="/remote/wheelhouse$ROCM_VERSION"
     else
-        PYTORCH_FINAL_PACKAGE_DIR="/remote/$LIBTORCH_HOUSE_DIR"
+        PYTORCH_FINAL_PACKAGE_DIR="/remote/libtorch_house$ROCM_VERSION"
     fi
 fi
 mkdir -p "$PYTORCH_FINAL_PACKAGE_DIR" || true
@@ -78,8 +78,8 @@ else
     exit 1
 fi
 
-ROCM_VERSION_WITH_PATCH="rocm${ROCM_VERSION_MAJOR}.${ROCM_VERSION_MINOR}.${ROCM_VERSION_PATCH}"
-ROCM_INT=$((ROCM_VERSION_MAJOR * 10000 + ROCM_VERSION_MINOR * 100 + ROCM_VERSION_PATCH))
+ROCM_VERSION_WITH_PATCH=rocm${ROCM_VERSION_MAJOR}.${ROCM_VERSION_MINOR}.${ROCM_VERSION_PATCH}
+ROCM_INT=$(($ROCM_VERSION_MAJOR * 10000 + $ROCM_VERSION_MINOR * 100 + $ROCM_VERSION_PATCH))
 
 # Required ROCm libraries
 LIGHTWEIGHT_ROCM_SO_FILES=(
@@ -130,7 +130,7 @@ if [[ "$BUILD_HEAVYWEIGHT" == "1"]]; then
 fi
 
 
-OS_NAME="(awk -F= '/^NAME/{print $2}' /etc/os-release)"
+OS_NAME='awk -F= '/^NAME/{print $2}' /etc/os-release'
 if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
     LIBGOMP_PATH="/usr/lib64/libgomp.so.1"
     LIBNUMA_PATH="/usr/lib64/libnuma.so.1"
@@ -204,7 +204,6 @@ OS_SO_PATHS=($LIBGOMP_PATH $LIBNUMA_PATH\
              $LIBMETIS_PATH $LIBLAPACK_PATH\
              $LIBBLAS_PATH)
 OS_SO_FILES=()
-
 for lib in "${OS_SO_PATHS[@]}"
 do
     file_name="${lib##*/}" # Substring removal of path to get filename
