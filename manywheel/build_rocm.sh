@@ -235,7 +235,7 @@ do_lightweight_build() {
             echo "Error: Lightweight library $lib is not found." >&2
             exit 1
         fi
-        ROCM_SO_PATHS_LIGHTWEIGHT+=("$file_path")
+	ROCM_SO_PATHS_LIGHTWEIGHT[${#LIGHTWEIGHT_ROCM_SO_FILES[@]}]="$file_path" # Append lib to array
     done
 
     # Set environment so build_common.sh (or build_libtorch.sh) sees it
@@ -277,24 +277,46 @@ do_heavyweight_build() {
             echo "Error: Heavyweight library $lib not found." >&2
             exit 1
         fi
-        ROCM_SO_PATHS_HEAVYWEIGHT+=("$file_path")
+	ROCM_SO_PATHS_HEAVYWEIGHT[${#ROCM_SO_PATHS_HEAVYWEIGHT[@]}]="$file_path" # Append lib to array
     done
 
     # Add OS libraries
     DEPS_LIST=( "${ROCM_SO_PATHS_HEAVYWEIGHT[@]}" "${OS_SO_PATHS[*]}" )
     DEPS_SONAME=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" "${OS_SO_FILES[*]}" )
 
-    # Add architecture-specific files
-    DEPS_AUX_SRCLIST=(
-        "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}"
-        "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}"
-        "/opt/amdgpu/share/libdrm/amdgpu.ids"
-    )
-    DEPS_AUX_DSTLIST=(
-        "${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}"
-        "${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}"
-        "share/libdrm/amdgpu.ids"
-    )
+    DEPS_AUX_SRCLIST=()
+    DEPS_AUX_SRCLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}")
+    DEPS_AUX_SRCLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}")
+    DEPS_AUX_SRCLIST+=("/opt/amdgpu/share/libdrm/amdgpu.ids")
+
+	DEPS_AUX_DSTLIST=()
+    DEPS_AUX_DSTLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}")
+    DEPS_AUX_DSTLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}")
+    DEPS_AUX_DSTLIST+=("share/libdrm/amdgpu.ids")
+    if [[ $ROCM_INT -ge 50500 ]]; then
+        # MIOpen library files
+        MIOPEN_SHARE_SRC=$ROCM_HOME/share/miopen/db
+        MIOPEN_SHARE_DST=share/miopen/db
+        MIOPEN_SHARE_FILES=($(ls $MIOPEN_SHARE_SRC))
+
+        DEPS_AUX_SRCLIST+=(${MIOPEN_SHARE_FILES[@]/#/$MIOPEN_SHARE_SRC/})
+        DEPS_AUX_DSTLIST+=(${MIOPEN_SHARE_FILES[@]/#/$MIOPEN_SHARE_DST/})
+    fi
+
+    if [[ $ROCM_INT -ge 50600 ]]; then
+        # RCCL library files
+        if [[ $ROCM_INT -ge 50700 ]]; then
+            RCCL_SHARE_SRC=$ROCM_HOME/share/rccl/msccl-algorithms
+            RCCL_SHARE_DST=share/rccl/msccl-algorithms
+        else
+            RCCL_SHARE_SRC=$ROCM_HOME/lib/msccl-algorithms
+            RCCL_SHARE_DST=lib/msccl-algorithms
+        fi
+        RCCL_SHARE_FILES=($(ls $RCCL_SHARE_SRC))
+
+        DEPS_AUX_SRCLIST+=(${RCCL_SHARE_FILES[@]/#/$RCCL_SHARE_SRC/})
+        DEPS_AUX_DSTLIST+=(${RCCL_SHARE_FILES[@]/#/$RCCL_SHARE_DST/})
+    fi
 
     # Finally, source the main build script
     SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
