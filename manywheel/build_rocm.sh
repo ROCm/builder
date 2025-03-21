@@ -224,12 +224,12 @@ do_lightweight_build() {
     # First, gather actual file paths for the minimal set
     ROCM_SO_PATHS_LIGHTWEIGHT=()
     for lib in "${LIGHTWEIGHT_ROCM_SO_FILES[@]}"; do
-        file_path="$(find "$ROCM_HOME/lib" -name "$lib" 2>/dev/null | head -n1)"
+        file_path=($(find $ROCM_HOME/lib/ -name "$lib"))
         if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
-            file_path="$(find "$ROCM_HOME/lib64" -name "$lib" 2>/dev/null | head -n1)"
+             file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
         fi
         if [[ -z $file_path ]]; then
-            file_path="$(find "$ROCM_HOME" -name "$lib" 2>/dev/null | head -n1)"
+            file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
         fi
         if [[ -z $file_path ]]; then
             echo "Error: Lightweight library $lib is not found." >&2
@@ -266,12 +266,12 @@ do_heavyweight_build() {
     # Gather file paths for the full set
     ROCM_SO_PATHS_HEAVYWEIGHT=()
     for lib in "${HEAVYWEIGHT_ROCM_SO_FILES[@]}"; do
-        file_path="$(find "$ROCM_HOME/lib" -name "$lib" 2>/dev/null | head -n1)"
+        file_path=($(find $ROCM_HOME/lib/ -name "$lib")) # First search in lib
         if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
-            file_path="$(find "$ROCM_HOME/lib64" -name "$lib" 2>/dev/null | head -n1)"
+            file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
         fi
         if [[ -z $file_path ]]; then
-            file_path="$(find "$ROCM_HOME" -name "$lib" 2>/dev/null | head -n1)"
+            file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
         fi
         if [[ -z $file_path ]]; then
             echo "Error: Heavyweight library $lib not found." >&2
