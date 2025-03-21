@@ -113,14 +113,6 @@ if [[ $ROCM_INT -ge 60200 ]]; then
     HEAVYWEIGHT_ROCM_SO_FILES+=("librocm-core.so")
 fi
 
-# Select which set of ROCm libraries to use
-if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
-    ROCM_SO_FILES=( "${LIGHTWEIGHT_ROCM_SO_FILES[@]}" )
-fi
-
-if [[ "$BUILD_HEAVYWEIGHT" == "1" ]]; then
-    ROCM_SO_FILES=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" )
-fi
 
 
 OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
