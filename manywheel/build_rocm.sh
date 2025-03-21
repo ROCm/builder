@@ -289,7 +289,7 @@ do_heavyweight_build() {
     DEPS_AUX_SRCLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}")
     DEPS_AUX_SRCLIST+=("/opt/amdgpu/share/libdrm/amdgpu.ids")
 
-	DEPS_AUX_DSTLIST=()
+    DEPS_AUX_DSTLIST=()
     DEPS_AUX_DSTLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}")
     DEPS_AUX_DSTLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}")
     DEPS_AUX_DSTLIST+=("share/libdrm/amdgpu.ids")
