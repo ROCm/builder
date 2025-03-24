@@ -239,7 +239,7 @@ do_lightweight_build() {
     done
 
     # Set environment so build_common.sh (or build_libtorch.sh) sees it
-    DEPS_LIST=(${ROCM_SO_PATHS_LIGHTWEIGHT[*})
+    DEPS_LIST=(${ROCM_SO_PATHS_LIGHTWEIGHT[*]})
     DEPS_SONAME=(${LIGHTWEIGHT_ROCM_SO_FILES[*]})
     DEPS_AUX_SRCLIST=()
     DEPS_AUX_DSTLIST=()
