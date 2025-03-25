@@ -265,6 +265,7 @@ if [[ -n "$BUILD_PYTHONLESS" ]]; then
     cp /tmp/$LIBTORCH_HOUSE_DIR/libtorch-$LIBTORCH_ABI$LIBTORCH_VARIANT-$PYTORCH_BUILD_VERSION.zip \
        /tmp/$LIBTORCH_HOUSE_DIR/libtorch-$LIBTORCH_ABI$LIBTORCH_VARIANT-latest.zip
 fi
+popd
 echo 'Built this wheel:'
 ls /tmp/$WHEELHOUSE_DIR
 mkdir -p "/$WHEELHOUSE_DIR"
@@ -280,4 +281,3 @@ if [[ -n "$BUILD_PYTHONLESS" ]]; then
     rm -rf /tmp/$LIBTORCH_HOUSE_DIR
 fi
 rm -rf /tmp/$WHEELHOUSE_DIR
-popd
