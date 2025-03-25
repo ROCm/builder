@@ -64,20 +64,7 @@ replace_needed_sofiles() {
     done
 }
 
-echo 'Built this wheel:'
-ls /tmp/$WHEELHOUSE_DIR
-mkdir -p "/$WHEELHOUSE_DIR"
-mv /tmp/$WHEELHOUSE_DIR/torch*linux*.whl /$WHEELHOUSE_DIR/
 
-if [[ "$USE_SPLIT_BUILD" == "true" ]]; then
-    mv /tmp/$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/ || true
-fi
-
-if [[ -n "$BUILD_PYTHONLESS" ]]; then
-    mkdir -p /$LIBTORCH_HOUSE_DIR
-    mv /tmp/$LIBTORCH_HOUSE_DIR/*.zip /$LIBTORCH_HOUSE_DIR
-    rm -rf /tmp/$LIBTORCH_HOUSE_DIR
-fi
 rm -rf /tmp_dir
 mkdir /tmp_dir
 pushd /tmp_dir
