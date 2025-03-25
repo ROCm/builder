@@ -277,12 +277,12 @@ do_heavyweight_build() {
             echo "Error: Heavyweight library $lib not found." >&2
             exit 1
         fi
-	ROCM_SO_PATHS_HEAVYWEIGHT[${#ROCM_SO_PATHS_HEAVYWEIGHT[@]}]="$file_path" # Append lib to array
+	ROCM_SO_PATHS_HEAVYWEIGHT[${#HEAVYWEIGHT_ROCM_SO_FILES[@]}]="$file_path" # Append lib to array
     done
 
     # Add OS libraries
-    DEPS_LIST=( "${ROCM_SO_PATHS_HEAVYWEIGHT[@]}" "${OS_SO_PATHS[*]}" )
-    DEPS_SONAME=( "${HEAVYWEIGHT_ROCM_SO_FILES[@]}" "${OS_SO_FILES[*]}" )
+    DEPS_LIST=(${ROCM_SO_PATHS_HEAVYWEIGHT[*]})
+    DEPS_SONAME=(${HEAVYWEIGHT_ROCM_SO_FILES[*]})
 
     DEPS_AUX_SRCLIST=()
     DEPS_AUX_SRCLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}")
