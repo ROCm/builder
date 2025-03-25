@@ -380,3 +380,8 @@ if [[ "$BUILD_HEAVYWEIGHT" == "1" ]]; then
     do_heavyweight_build
 fi
 
+rm -rf /tmp/$WHEELHOUSE_DIR
+rm -rf /tmp_dir
+mkdir /tmp_dir
+pushd /tmp_dir
+
