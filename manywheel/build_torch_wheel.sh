@@ -280,4 +280,3 @@ if [[ -n "$BUILD_PYTHONLESS" ]]; then
     mv /tmp/$LIBTORCH_HOUSE_DIR/*.zip /$LIBTORCH_HOUSE_DIR
     rm -rf /tmp/$LIBTORCH_HOUSE_DIR
 fi
-rm -rf /tmp/$WHEELHOUSE_DIR
