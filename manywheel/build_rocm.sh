@@ -235,7 +235,7 @@ do_lightweight_build() {
             echo "Error: Lightweight library $lib is not found." >&2
             exit 1
         fi
-	ROCM_SO_PATHS_LIGHTWEIGHT[${#LIGHTWEIGHT_ROCM_SO_FILES[@]}]="$file_path" # Append lib to array
+	ROCM_SO_PATHS_LIGHTWEIGHT[${#ROCM_SO_PATHS_LIGHTWEIGHT[@]}]="$file_path" # Append lib to array
     done
 
     # Set environment so build_common.sh (or build_libtorch.sh) sees it
@@ -277,7 +277,7 @@ do_heavyweight_build() {
             echo "Error: Heavyweight library $lib not found." >&2
             exit 1
         fi
-	ROCM_SO_PATHS_HEAVYWEIGHT[${#HEAVYWEIGHT_ROCM_SO_FILES[@]}]="$file_path" # Append lib to array
+	ROCM_SO_PATHS_HEAVYWEIGHT[${#ROCM_SO_PATHS_HEAVYWEIGHT[@]}]="$file_path" # Append lib to array
     done
 
     # Add OS libraries
