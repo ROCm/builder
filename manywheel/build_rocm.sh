@@ -266,7 +266,7 @@ do_heavyweight_build() {
     # Gather file paths for the full set
     ROCM_SO_PATHS_HEAVYWEIGHT=()
     for lib in "${HEAVYWEIGHT_ROCM_SO_FILES[@]}"; do
-        file_path=($(find $ROCM_HOME/lib/ -name "$lib")) # First search in lib
+        file_path=($(find $ROCM_HOME/lib/ -name "$lib"))
         if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
             file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
         fi
