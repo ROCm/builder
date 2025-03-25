@@ -78,7 +78,9 @@ if [[ -n "$BUILD_PYTHONLESS" ]]; then
     mv /tmp/$LIBTORCH_HOUSE_DIR/*.zip /$LIBTORCH_HOUSE_DIR
     rm -rf /tmp/$LIBTORCH_HOUSE_DIR
 fi
-
+rm -rf /tmp_dir
+mkdir /tmp_dir
+pushd /tmp_dir
 for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.whl /$LIBTORCH_HOUSE_DIR/libtorch*.zip; do
 
     # if the glob didn't match anything
