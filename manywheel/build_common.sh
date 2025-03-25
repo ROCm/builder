@@ -86,7 +86,6 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.w
         continue
     fi
 
-    rm -rf tmp
     mkdir -p tmp
     cd tmp
     cp $pkg .
