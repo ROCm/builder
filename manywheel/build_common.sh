@@ -199,7 +199,13 @@ if [[ -n "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
     if [[ -n "$BUILD_PYTHONLESS" ]]; then
         cp /$LIBTORCH_HOUSE_DIR/libtorch*.zip "$PYTORCH_FINAL_PACKAGE_DIR"
     else
-        cp /$WHEELHOUSE_DIR/torch*.whl "$PYTORCH_FINAL_PACKAGE_DIR"
+        if [ "${BUILD_LIGHTWEIGHT}" == "0" ]; then
+          # Remove .lw. from the final copy
+          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}/$(basename "/${WHEELHOUSE_DIR}"/torch*.whl | sed 's/\.lw\.//')"
+        else
+          # Copy as-is
+          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
+        fi
     fi
 fi
 
