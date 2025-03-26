@@ -65,6 +65,7 @@ if [[ -z "$build_number" ]]; then
 fi
 if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
     build_version="${build_version}.lw"
+    export BUILD_LIGHTWEIGHT=0
 fi
 
 if [[ -z "$PYTORCH_ROOT" ]]; then
