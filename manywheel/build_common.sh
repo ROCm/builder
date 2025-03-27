@@ -82,6 +82,12 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*${WHEELN
     unzip -q $(basename $pkg)
     rm -f $(basename $pkg)
 
+    dist_info_dir="$(ls -d *dist-info)"
+    # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
+    sed -i -e "/Version: /s/.git/.${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
+    # Rename dist-info directory to contain WHEELNAME_MARKER
+    mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/.${WHEELNAME_MARKER}.git/g")
+
     if [[ -d torch ]]; then
         PREFIX=torch
     else
