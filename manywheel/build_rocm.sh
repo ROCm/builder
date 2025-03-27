@@ -116,7 +116,7 @@ do_lightweight_build() {
     else
         BUILD_SCRIPT=build_libtorch.sh
     fi
-    export WHEELNAME_MARKER="lw" 
+    export WHEELNAME_MARKER="${LIGHTWEIGHT_WHEELNAME_MARKER}" 
     source "$SCRIPTPATH/${BUILD_SCRIPT}"
 
     echo "=== Done building LIGHTWEIGHT variant ==="
@@ -319,7 +319,7 @@ do_heavyweight_build() {
     else
         BUILD_SCRIPT=build_libtorch.sh
     fi
-    export WHEELNAME_MARKER="hw" 
+    export WHEELNAME_MARKER=""
     source "$SCRIPTPATH/${BUILD_SCRIPT}"
 
     echo "=== Done building HEAVYWEIGHT variant ==="
@@ -362,6 +362,7 @@ fi
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
+export LIGHTWEIGHT_WHEELNAME_MARKER=".lw"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 if [[ -z "$BUILD_PYTHONLESS" ]]; then
     BUILD_SCRIPT=build_torch_wheel.sh	

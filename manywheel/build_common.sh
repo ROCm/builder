@@ -68,7 +68,7 @@ replace_needed_sofiles() {
 rm -rf /tmp_dir
 mkdir /tmp_dir
 pushd /tmp_dir
-for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*${WHEELNAME_MARKER}*linux*.whl /$LIBTORCH_HOUSE_DIR/libtorch*.zip; do
+for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MARKER}/torch*linux*.whl /$LIBTORCH_HOUSE_DIR/libtorch*.zip; do
 
     # if the glob didn't match anything
     if [[ ! -e $pkg ]]; then
@@ -84,9 +84,9 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*${WHEELN
 
     dist_info_dir="$(ls -d *dist-info)"
     # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
-    sed -i -e "/Version: /s/.git/.${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
+    sed -i -e "/Version: /s/.git/${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
     # Rename dist-info directory to contain WHEELNAME_MARKER
-    mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/.${WHEELNAME_MARKER}.git/g")
+    mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/g")
 
     if [[ -d torch ]]; then
         PREFIX=torch
@@ -195,6 +195,8 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*${WHEELN
     # replace original wheel
     rm -f $pkg
     mv $(basename $pkg) $pkg
+    // Rename wheel to match metadata in dist-info
+    mv $pkg "$(echo $pkg | sed \"s/\.git/${WHEELNAME_MARKER}.git/\")"
     cd ..
     rm -rf tmp
 done
@@ -205,7 +207,7 @@ if [[ -n "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
     if [[ -n "$BUILD_PYTHONLESS" ]]; then
         cp /$LIBTORCH_HOUSE_DIR/libtorch*.zip "$PYTORCH_FINAL_PACKAGE_DIR"
     else
-        cp "/${WHEELHOUSE_DIR}"/torch*${WHEELNAME_MARKER}*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
+        cp "/${WHEELHOUSE_DIR}/${WHEELNAME_MARKER}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
     fi
 fi
 
@@ -229,10 +231,10 @@ if [[ -z "$BUILD_PYTHONLESS" ]]; then
   pip uninstall -y "$TORCH_PACKAGE_NAME"
   
   if [[ "$USE_SPLIT_BUILD" == "true" ]]; then
-    pip install "$TORCH_NO_PYTHON_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR --no-dependencies -v
+    pip install "$TORCH_NO_PYTHON_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR/${WHEELNAME_MARKER} --no-dependencies -v
   fi
   
-  pip install "$TORCH_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR --no-dependencies -v
+  pip install "$TORCH_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR/${WHEELNAME_MARKER} --no-dependencies -v
 
   # Print info on the libraries installed in this wheel
   # Rather than adjust find command to skip non-library files with an embedded *.so* in their name,

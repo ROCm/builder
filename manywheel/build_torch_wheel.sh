@@ -271,11 +271,12 @@ echo 'Built this wheel:'
 ls /tmp/$WHEELHOUSE_DIR
 mkdir -p "/$WHEELHOUSE_DIR"
 torch_wheel=$(ls /tmp/$WHEELHOUSE_DIR/torch*linux*.whl | head -n1)
+# Place wheels in separate directories to distinguish them in build_common.sh
 if [ "${BUILD_LIGHTWEIGHT}" == "1" ]; then
-  cp $torch_wheel "/${WHEELHOUSE_DIR}/$(basename $torch_wheel | sed 's/\.git/.lw.git/')"
+  cp $torch_wheel "/${WHEELHOUSE_DIR}/${LIGHTWEIGHT_WHEELNAME_MARKER}/"
 fi
 if [ "${BUILD_HEAVYWEIGHT}" == "1" ]; then
-  cp $torch_wheel "/${WHEELHOUSE_DIR}/$(basename $torch_wheel | sed 's/\.git/.hw.git/')"
+  cp $torch_wheel "/${WHEELHOUSE_DIR}/"
 fi
 rm $torch_wheel
 
