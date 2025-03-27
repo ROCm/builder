@@ -201,7 +201,7 @@ if [[ -n "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
     else
         if [ "${BUILD_LIGHTWEIGHT}" == "0" ]; then
           # Remove .lw. from the final copy
-          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}/$(basename "/${WHEELHOUSE_DIR}"/torch*.whl | sed 's/\.lw\.//')"
+          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}/$(basename "/${WHEELHOUSE_DIR}"/torch*.whl | sed 's/\.lw//')"
         else
           # Copy as-is
           cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
