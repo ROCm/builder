@@ -63,10 +63,10 @@ fi
 if [[ -z "$build_number" ]]; then
     build_number=1
 fi
-if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
-    build_version="${build_version}.lw"
-    export BUILD_LIGHTWEIGHT=0
-fi
+# TODO: Commenting for now so that the common wheel built does not have ".lw" in the name/version
+#if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
+#    build_version="${build_version}.lw"
+#fi
 
 if [[ -z "$PYTORCH_ROOT" ]]; then
     echo "Need to set PYTORCH_ROOT env variable"
@@ -270,7 +270,14 @@ popd
 echo 'Built this wheel:'
 ls /tmp/$WHEELHOUSE_DIR
 mkdir -p "/$WHEELHOUSE_DIR"
-mv /tmp/$WHEELHOUSE_DIR/torch*linux*.whl /$WHEELHOUSE_DIR/
+torch_wheel=$(ls /tmp/$WHEELHOUSE_DIR/torch*linux*.whl | head -n1)
+if [ "${BUILD_LIGHTWEIGHT}" == "1" ]; then
+  cp $torch_wheel "/${WHEELHOUSE_DIR}/$(basename $torch_wheel | sed 's/\.git/.lw.git/')"
+fi
+if [ "${BUILD_HEAVYWEIGHT}" == "1" ]; then
+  cp $torch_wheel "/${WHEELHOUSE_DIR}/$(basename $torch_wheel | sed 's/\.git/.hw.git/')"
+fi
+rm $torch_wheel
 
 if [[ "$USE_SPLIT_BUILD" == "true" ]]; then
     mv /tmp/$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/ || true
