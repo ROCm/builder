@@ -196,7 +196,7 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     rm -f $pkg
     mv $(basename $pkg) $pkg
     // Rename wheel to match metadata in dist-info
-    mv $pkg "$(echo $pkg | sed \"s/\.git/${WHEELNAME_MARKER}.git/\")"
+    mv $pkg "$(echo $pkg | sed -e "s/\.git/${WHEELNAME_MARKER}.git/")"
     cd ..
     rm -rf tmp
 done
