@@ -68,7 +68,7 @@ replace_needed_sofiles() {
 rm -rf /tmp_dir
 mkdir /tmp_dir
 pushd /tmp_dir
-for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.whl /$LIBTORCH_HOUSE_DIR/libtorch*.zip; do
+for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MARKER}/torch*linux*.whl /$LIBTORCH_HOUSE_DIR/libtorch*.zip; do
 
     # if the glob didn't match anything
     if [[ ! -e $pkg ]]; then
@@ -81,6 +81,15 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.w
 
     unzip -q $(basename $pkg)
     rm -f $(basename $pkg)
+
+    dist_info_dir="$(ls -d *dist-info)"
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
+        sed -i -e "/Version: /s/.git/${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
+        # Rename dist-info directory to contain WHEELNAME_MARKER
+        new_dist_info_dir=$(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/")
+        mv ${dist_info_dir} ${new_dist_info_dir} 
+    fi
 
     if [[ -d torch ]]; then
         PREFIX=torch
@@ -145,7 +154,13 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.w
     done
 
     # regenerate the RECORD file with new hashes
-    record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
+    # record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        record_file=$(ls ${new_dist_info_dir}/RECORD)
+    else
+        record_file=$(ls ${dist_info_dir}/RECORD)
+    fi
+
     if [[ -e $record_file ]]; then
         echo "Generating new record file $record_file"
         : > "$record_file"
@@ -189,6 +204,11 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/torch*linux*.w
     # replace original wheel
     rm -f $pkg
     mv $(basename $pkg) $pkg
+    # Rename wheel to reflect lightweight/heavyweight
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        # Rename wheel to match metadata in dist-info
+        mv $pkg $(echo $pkg | sed -e "s/\.git/${WHEELNAME_MARKER}.git/")
+    fi
     cd ..
     rm -rf tmp
 done
@@ -199,13 +219,7 @@ if [[ -n "$PYTORCH_FINAL_PACKAGE_DIR" ]]; then
     if [[ -n "$BUILD_PYTHONLESS" ]]; then
         cp /$LIBTORCH_HOUSE_DIR/libtorch*.zip "$PYTORCH_FINAL_PACKAGE_DIR"
     else
-        if [ "${BUILD_LIGHTWEIGHT}" == "0" ]; then
-          # Remove .lw. from the final copy
-          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}/$(basename "/${WHEELHOUSE_DIR}"/torch*.whl | sed 's/\.lw//')"
-        else
-          # Copy as-is
-          cp "/${WHEELHOUSE_DIR}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
-        fi
+        cp "/${WHEELHOUSE_DIR}/${WHEELNAME_MARKER}"/torch*.whl "${PYTORCH_FINAL_PACKAGE_DIR}"
     fi
 fi
 
@@ -229,10 +243,10 @@ if [[ -z "$BUILD_PYTHONLESS" ]]; then
   pip uninstall -y "$TORCH_PACKAGE_NAME"
   
   if [[ "$USE_SPLIT_BUILD" == "true" ]]; then
-    pip install "$TORCH_NO_PYTHON_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR --no-dependencies -v
+    pip install "$TORCH_NO_PYTHON_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR/${WHEELNAME_MARKER} --no-dependencies -v
   fi
   
-  pip install "$TORCH_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR --no-dependencies -v
+  pip install "$TORCH_PACKAGE_NAME" --no-index -f /$WHEELHOUSE_DIR/${WHEELNAME_MARKER} --no-dependencies -v
 
   # Print info on the libraries installed in this wheel
   # Rather than adjust find command to skip non-library files with an embedded *.so* in their name,
