@@ -362,7 +362,7 @@ fi
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
-export LIGHTWEIGHT_WHEELNAME_MARKER=".lw"
+export LIGHTWEIGHT_WHEELNAME_MARKER="${LIGHTWEIGHT_WHEELNAME_MARKER}"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 if [[ -z "$BUILD_PYTHONLESS" ]]; then
     BUILD_SCRIPT=build_torch_wheel.sh	
