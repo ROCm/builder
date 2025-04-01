@@ -82,12 +82,13 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     unzip -q $(basename $pkg)
     rm -f $(basename $pkg)
 
+    dist_info_dir="$(ls -d *dist-info)"
     if [[ -n "${WHEELNAME_MARKER}" ]]; then
-        dist_info_dir="$(ls -d *dist-info)"
         # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
         sed -i -e "/Version: /s/.git/${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
         # Rename dist-info directory to contain WHEELNAME_MARKER
-        mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/")
+        new_dist_info_dir=$(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/")
+        mv ${dist_info_dir} ${new_dist_info_dir} 
     fi
 
     if [[ -d torch ]]; then
@@ -153,7 +154,12 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     done
 
     # regenerate the RECORD file with new hashes
-    record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
+    # record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
+    record_file=$(ls ${dist_info_dir}/RECORD)
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        record_file=$(ls ${new_dist_info_dir}/RECORD)
+    fi
+
     if [[ -e $record_file ]]; then
         echo "Generating new record file $record_file"
         : > "$record_file"
