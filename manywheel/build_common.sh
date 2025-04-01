@@ -82,11 +82,13 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     unzip -q $(basename $pkg)
     rm -f $(basename $pkg)
 
-    dist_info_dir="$(ls -d *dist-info)"
-    # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
-    sed -i -e "/Version: /s/.git/${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
-    # Rename dist-info directory to contain WHEELNAME_MARKER
-    mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/")
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        dist_info_dir="$(ls -d *dist-info)"
+        # Replace "Version: " entry in METADATA file with WHEELNAME_MARKER
+        sed -i -e "/Version: /s/.git/${WHEELNAME_MARKER}.git/" ${dist_info_dir}/METADATA
+        # Rename dist-info directory to contain WHEELNAME_MARKER
+        mv ${dist_info_dir} $(echo "${dist_info_dir}" | sed -e "s/.git/${WHEELNAME_MARKER}.git/")
+    fi
 
     if [[ -d torch ]]; then
         PREFIX=torch
@@ -195,8 +197,10 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     # replace original wheel
     rm -f $pkg
     mv $(basename $pkg) $pkg
-    # Rename wheel to match metadata in dist-info
-    mv $pkg $(echo $pkg | sed -e "s/\.git/${WHEELNAME_MARKER}.git/")
+    if [[ -n "${WHEELNAME_MARKER}" ]]; then
+        # Rename wheel to match metadata in dist-info
+        mv $pkg $(echo $pkg | sed -e "s/\.git/${WHEELNAME_MARKER}.git/")
+    fi
     cd ..
     rm -rf tmp
 done
