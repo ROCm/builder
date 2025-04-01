@@ -74,205 +74,219 @@ fi
 ROCM_VERSION_WITH_PATCH=rocm${ROCM_VERSION_MAJOR}.${ROCM_VERSION_MINOR}.${ROCM_VERSION_PATCH}
 ROCM_INT=$(($ROCM_VERSION_MAJOR * 10000 + $ROCM_VERSION_MINOR * 100 + $ROCM_VERSION_PATCH))
 
-# Required ROCm libraries
-ROCM_SO_FILES=(
-    "libMIOpen.so"
-    "libamdhip64.so"
-    "libhipblas.so"
-    "libhipfft.so"
-    "libhiprand.so"
-    "libhipsolver.so"
-    "libhipsparse.so"
-    "libhsa-runtime64.so"
-    "libamd_comgr.so"
-    "libmagma.so"
-    "librccl.so"
-    "librocblas.so"
-    "librocfft.so"
-    "librocm_smi64.so"
-    "librocrand.so"
-    "librocsolver.so"
-    "librocsparse.so"
-    "libroctracer64.so"
-    "libroctx64.so"
-)
+do_lightweight_build() {
+    echo "=== Building LIGHTWEIGHT variant ==="
 
-if [[ $ROCM_INT -ge 50600 ]]; then
-    ROCM_SO_FILES+=("libhipblaslt.so")
-fi
-
-if [[ $ROCM_INT -lt 50500 ]]; then
-    ROCM_SO_FILES+=("librocfft-device-0.so")
-    ROCM_SO_FILES+=("librocfft-device-1.so")
-    ROCM_SO_FILES+=("librocfft-device-2.so")
-    ROCM_SO_FILES+=("librocfft-device-3.so")
-fi
-
-if [[ $ROCM_INT -ge 50400 ]]; then
-    ROCM_SO_FILES+=("libhiprtc.so")
-fi
-
-if [[ $ROCM_INT -ge 60100 ]]; then
-    ROCM_SO_FILES+=("librocprofiler-register.so")
-fi
-
-if [[ $ROCM_INT -ge 60200 ]]; then
-    ROCM_SO_FILES+=("librocm-core.so")
-fi
-
-OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
-if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
-    LIBGOMP_PATH="/usr/lib64/libgomp.so.1"
-    LIBNUMA_PATH="/usr/lib64/libnuma.so.1"
-    LIBELF_PATH="/usr/lib64/libelf.so.1"
-    if [[ "$OS_NAME" == *"CentOS Linux"* ]]; then
-        LIBTINFO_PATH="/usr/lib64/libtinfo.so.5"
-    else
-        LIBTINFO_PATH="/usr/lib64/libtinfo.so.6"
-    fi
-    LIBDRM_PATH="/opt/amdgpu/lib64/libdrm.so.2"
-    LIBDRM_AMDGPU_PATH="/opt/amdgpu/lib64/libdrm_amdgpu.so.1"
-    if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
-        # Below libs are direct dependencies of libhipsolver
-        LIBSUITESPARSE_CONFIG_PATH="/lib64/libsuitesparseconfig.so.4"
-        if [[ "$OS_NAME" == *"CentOS Linux"* ]]; then
-            LIBCHOLMOD_PATH="/lib64/libcholmod.so.2"
-            # Below libs are direct dependencies of libsatlas
-            LIBGFORTRAN_PATH="/lib64/libgfortran.so.3"
-        else
-            LIBCHOLMOD_PATH="/lib64/libcholmod.so.3"
-            # Below libs are direct dependencies of libsatlas
-            LIBGFORTRAN_PATH="/lib64/libgfortran.so.5"
-        fi
-            # Below libs are direct dependencies of libcholmod
-            LIBAMD_PATH="/lib64/libamd.so.2"
-            LIBCAMD_PATH="/lib64/libcamd.so.2"
-            LIBCCOLAMD_PATH="/lib64/libccolamd.so.2"
-            LIBCOLAMD_PATH="/lib64/libcolamd.so.2"
-            LIBSATLAS_PATH="/lib64/atlas/libsatlas.so.3"
-            # Below libs are direct dependencies of libsatlas
-            LIBQUADMATH_PATH="/lib64/libquadmath.so.0"
-    fi
-    MAYBE_LIB64=lib64
-elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
-    LIBGOMP_PATH="/usr/lib/x86_64-linux-gnu/libgomp.so.1"
-    LIBNUMA_PATH="/usr/lib/x86_64-linux-gnu/libnuma.so.1"
-    LIBELF_PATH="/usr/lib/x86_64-linux-gnu/libelf.so.1"
-    if [[ $ROCM_INT -ge 50300 ]]; then
-        LIBTINFO_PATH="/lib/x86_64-linux-gnu/libtinfo.so.6"
-    else
-        LIBTINFO_PATH="/lib/x86_64-linux-gnu/libtinfo.so.5"
-    fi
-    LIBDRM_PATH="/usr/lib/x86_64-linux-gnu/libdrm.so.2"
-    LIBDRM_AMDGPU_PATH="/usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1"
-    if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
-        # Below libs are direct dependencies of libhipsolver
-        LIBCHOLMOD_PATH="/lib/x86_64-linux-gnu/libcholmod.so.3"
-        # Below libs are direct dependencies of libcholmod
-        LIBSUITESPARSE_CONFIG_PATH="/lib/x86_64-linux-gnu/libsuitesparseconfig.so.5"
-        LIBAMD_PATH="/lib/x86_64-linux-gnu/libamd.so.2"
-        LIBCAMD_PATH="/lib/x86_64-linux-gnu/libcamd.so.2"
-        LIBCCOLAMD_PATH="/lib/x86_64-linux-gnu/libccolamd.so.2"
-        LIBCOLAMD_PATH="/lib/x86_64-linux-gnu/libcolamd.so.2"
-        LIBMETIS_PATH="/lib/x86_64-linux-gnu/libmetis.so.5"
-        LIBLAPACK_PATH="/lib/x86_64-linux-gnu/liblapack.so.3"
-        LIBBLAS_PATH="/lib/x86_64-linux-gnu/libblas.so.3"
-        # Below libs are direct dependencies of libblas
-        LIBGFORTRAN_PATH="/lib/x86_64-linux-gnu/libgfortran.so.5"
-        LIBQUADMATH_PATH="/lib/x86_64-linux-gnu/libquadmath.so.0"
-    fi
-    MAYBE_LIB64=lib
-fi
-OS_SO_PATHS=($LIBGOMP_PATH $LIBNUMA_PATH\
-             $LIBELF_PATH $LIBTINFO_PATH\
-             $LIBDRM_PATH $LIBDRM_AMDGPU_PATH\
-             $LIBSUITESPARSE_CONFIG_PATH\
-             $LIBCHOLMOD_PATH $LIBAMD_PATH\
-             $LIBCAMD_PATH $LIBCCOLAMD_PATH\
-             $LIBCOLAMD_PATH $LIBSATLAS_PATH\
-             $LIBGFORTRAN_PATH $LIBQUADMATH_PATH\
-             $LIBMETIS_PATH $LIBLAPACK_PATH\
-             $LIBBLAS_PATH)
-OS_SO_FILES=()
-for lib in "${OS_SO_PATHS[@]}"
-do
-    file_name="${lib##*/}" # Substring removal of path to get filename
-    OS_SO_FILES[${#OS_SO_FILES[@]}]=$file_name # Append lib to array
-done
-
-# rocBLAS library files
-if [[ $ROCM_INT -ge 50200 ]]; then
-    ROCBLAS_LIB_SRC=$ROCM_HOME/lib/rocblas/library
-    ROCBLAS_LIB_DST=lib/rocblas/library
-else
-    ROCBLAS_LIB_SRC=$ROCM_HOME/rocblas/lib/library
-    ROCBLAS_LIB_DST=lib/library
-fi
-ARCH=$(echo $PYTORCH_ROCM_ARCH | sed 's/;/|/g') # Replace ; seperated arch list to bar for grep
-ARCH_SPECIFIC_FILES=$(ls $ROCBLAS_LIB_SRC | grep -E $ARCH)
-OTHER_FILES=$(ls $ROCBLAS_LIB_SRC | grep -v gfx)
-ROCBLAS_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
-
-# hipblaslt library files
-HIPBLASLT_LIB_SRC=$ROCM_HOME/lib/hipblaslt/library
-HIPBLASLT_LIB_DST=lib/hipblaslt/library
-ARCH_SPECIFIC_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -E $ARCH)
-OTHER_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -v gfx)
-HIPBLASLT_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
-
-# ROCm library files
-# Overwrite ROCM_SO_FILES to contain only libmagma.so if BUILD_LIGHTWEIGHT is enabled
-if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
-    ROCM_SO_FILES=(
+    # ROCm library files
+    LIGHTWEIGHT_ROCM_SO_FILES=(
+        # Minimal set for lightweight
         "libmagma.so"
     )
-fi
-ROCM_SO_PATHS=()
-for lib in "${ROCM_SO_FILES[@]}"
-do
-    file_path=($(find $ROCM_HOME/lib/ -name "$lib")) # First search in lib
-    if [[ -z $file_path ]]; then
-        if [ -d "$ROCM_HOME/lib64/" ]; then
+
+    # First, gather actual file paths for the minimal set
+    ROCM_SO_PATHS_LIGHTWEIGHT=()
+    for lib in "${LIGHTWEIGHT_ROCM_SO_FILES[@]}"; do
+        file_path=($(find $ROCM_HOME/lib/ -name "$lib"))
+        if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
+             file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
+        fi
+        if [[ -z $file_path ]]; then
+            file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
+        fi
+        if [[ -z $file_path ]]; then
+            echo "Error: Lightweight library $lib is not found." >&2
+            exit 1
+        fi
+	ROCM_SO_PATHS_LIGHTWEIGHT[${#ROCM_SO_PATHS_LIGHTWEIGHT[@]}]="$file_path" # Append lib to array
+    done
+
+    # Set environment so build_common.sh (or build_libtorch.sh) sees it
+    DEPS_LIST=(${ROCM_SO_PATHS_LIGHTWEIGHT[*]})
+    DEPS_SONAME=(${LIGHTWEIGHT_ROCM_SO_FILES[*]})
+    DEPS_AUX_SRCLIST=()
+    DEPS_AUX_DSTLIST=()
+
+    # Because original script doesn't add OS libraries or arch-specific .co
+    # files for "lightweight", we skip them here
+
+    # Finally, source the main build script
+    SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+    if [[ -z "$BUILD_PYTHONLESS" ]]; then
+        BUILD_SCRIPT=build_common.sh
+    else
+        BUILD_SCRIPT=build_libtorch.sh
+    fi
+    export WHEELNAME_MARKER="${LIGHTWEIGHT_WHEELNAME_MARKER}" 
+    source "$SCRIPTPATH/${BUILD_SCRIPT}"
+
+    echo "=== Done building LIGHTWEIGHT variant ==="
+}
+
+# 2) HEAVYWEIGHT BUILD
+do_heavyweight_build() {
+    echo "=== Building HEAVYWEIGHT variant ==="
+
+    HEAVYWEIGHT_ROCM_SO_FILES=(
+        # Full set for heavyweight
+        "libMIOpen.so"
+        "libamdhip64.so"
+        "libhipblas.so"
+        "libhipblaslt.so"
+        "libhipfft.so"
+        "libhiprand.so"
+        "libhipsolver.so"
+        "libhipsparse.so"
+        "libhsa-runtime64.so"
+        "libhiprtc.so"
+        "libamd_comgr.so"
+        "libmagma.so"
+        "librccl.so"
+        "librocblas.so"
+        "librocfft.so"
+        "librocm_smi64.so"
+        "librocrand.so"
+        "librocsolver.so"
+        "librocsparse.so"
+        "libroctracer64.so"
+        "libroctx64.so"
+    )
+    
+    # Adjust list based on ROCm version
+    if [[ $ROCM_INT -ge 60100 ]]; then
+        HEAVYWEIGHT_ROCM_SO_FILES+=("librocprofiler-register.so")
+    fi
+    if [[ $ROCM_INT -ge 60200 ]]; then
+        HEAVYWEIGHT_ROCM_SO_FILES+=("librocm-core.so")
+    fi
+    
+    
+    
+    OS_NAME=`awk -F= '/^NAME/{print $2}' /etc/os-release`
+    if [[ "$OS_NAME" == *"CentOS Linux"* || "$OS_NAME" == *"AlmaLinux"* ]]; then
+        LIBGOMP_PATH="/usr/lib64/libgomp.so.1"
+        LIBNUMA_PATH="/usr/lib64/libnuma.so.1"
+        LIBELF_PATH="/usr/lib64/libelf.so.1"
+        if [[ "$OS_NAME" == *"CentOS Linux"* ]]; then
+            LIBTINFO_PATH="/usr/lib64/libtinfo.so.5"
+        else
+            LIBTINFO_PATH="/usr/lib64/libtinfo.so.6"
+        fi
+        LIBDRM_PATH="/opt/amdgpu/lib64/libdrm.so.2"
+        LIBDRM_AMDGPU_PATH="/opt/amdgpu/lib64/libdrm_amdgpu.so.1"
+        if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
+            # Below libs are direct dependencies of libhipsolver
+            LIBSUITESPARSE_CONFIG_PATH="/lib64/libsuitesparseconfig.so.4"
+            if [[ "$OS_NAME" == *"CentOS Linux"* ]]; then
+                LIBCHOLMOD_PATH="/lib64/libcholmod.so.2"
+                # Below libs are direct dependencies of libsatlas
+                LIBGFORTRAN_PATH="/lib64/libgfortran.so.3"
+            else
+                LIBCHOLMOD_PATH="/lib64/libcholmod.so.3"
+                # Below libs are direct dependencies of libsatlas
+                LIBGFORTRAN_PATH="/lib64/libgfortran.so.5"
+            fi
+                # Below libs are direct dependencies of libcholmod
+                LIBAMD_PATH="/lib64/libamd.so.2"
+                LIBCAMD_PATH="/lib64/libcamd.so.2"
+                LIBCCOLAMD_PATH="/lib64/libccolamd.so.2"
+                LIBCOLAMD_PATH="/lib64/libcolamd.so.2"
+                LIBSATLAS_PATH="/lib64/atlas/libsatlas.so.3"
+                # Below libs are direct dependencies of libsatlas
+                LIBQUADMATH_PATH="/lib64/libquadmath.so.0"
+        fi
+        MAYBE_LIB64=lib64
+    elif [[ "$OS_NAME" == *"Ubuntu"* ]]; then
+        LIBGOMP_PATH="/usr/lib/x86_64-linux-gnu/libgomp.so.1"
+        LIBNUMA_PATH="/usr/lib/x86_64-linux-gnu/libnuma.so.1"
+        LIBELF_PATH="/usr/lib/x86_64-linux-gnu/libelf.so.1"
+        if [[ $ROCM_INT -ge 50300 ]]; then
+            LIBTINFO_PATH="/lib/x86_64-linux-gnu/libtinfo.so.6"
+        else
+            LIBTINFO_PATH="/lib/x86_64-linux-gnu/libtinfo.so.5"
+        fi
+        LIBDRM_PATH="/usr/lib/x86_64-linux-gnu/libdrm.so.2"
+        LIBDRM_AMDGPU_PATH="/usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1"
+        if [[ $ROCM_INT -ge 60100 && $ROCM_INT -lt 60300 ]]; then
+            # Below libs are direct dependencies of libhipsolver
+            LIBCHOLMOD_PATH="/lib/x86_64-linux-gnu/libcholmod.so.3"
+            # Below libs are direct dependencies of libcholmod
+            LIBSUITESPARSE_CONFIG_PATH="/lib/x86_64-linux-gnu/libsuitesparseconfig.so.5"
+            LIBAMD_PATH="/lib/x86_64-linux-gnu/libamd.so.2"
+            LIBCAMD_PATH="/lib/x86_64-linux-gnu/libcamd.so.2"
+            LIBCCOLAMD_PATH="/lib/x86_64-linux-gnu/libccolamd.so.2"
+            LIBCOLAMD_PATH="/lib/x86_64-linux-gnu/libcolamd.so.2"
+            LIBMETIS_PATH="/lib/x86_64-linux-gnu/libmetis.so.5"
+            LIBLAPACK_PATH="/lib/x86_64-linux-gnu/liblapack.so.3"
+            LIBBLAS_PATH="/lib/x86_64-linux-gnu/libblas.so.3"
+            # Below libs are direct dependencies of libblas
+            LIBGFORTRAN_PATH="/lib/x86_64-linux-gnu/libgfortran.so.5"
+            LIBQUADMATH_PATH="/lib/x86_64-linux-gnu/libquadmath.so.0"
+        fi
+        MAYBE_LIB64=lib
+    fi
+    OS_SO_PATHS=($LIBGOMP_PATH $LIBNUMA_PATH\
+                 $LIBELF_PATH $LIBTINFO_PATH\
+                 $LIBDRM_PATH $LIBDRM_AMDGPU_PATH\
+                 $LIBSUITESPARSE_CONFIG_PATH\
+                 $LIBCHOLMOD_PATH $LIBAMD_PATH\
+                 $LIBCAMD_PATH $LIBCCOLAMD_PATH\
+                 $LIBCOLAMD_PATH $LIBSATLAS_PATH\
+                 $LIBGFORTRAN_PATH $LIBQUADMATH_PATH\
+                 $LIBMETIS_PATH $LIBLAPACK_PATH\
+                 $LIBBLAS_PATH)
+    OS_SO_FILES=()
+    for lib in "${OS_SO_PATHS[@]}"
+    do
+        file_name="${lib##*/}" # Substring removal of path to get filename
+        OS_SO_FILES[${#OS_SO_FILES[@]}]=$file_name # Append lib to array
+    done
+    
+    # rocBLAS library files
+    ROCBLAS_LIB_SRC=$ROCM_HOME/lib/rocblas/library
+    ROCBLAS_LIB_DST=lib/rocblas/library
+    ARCH=$(echo $PYTORCH_ROCM_ARCH | sed 's/;/|/g') # Replace ; seperated arch list to bar for grep
+    ARCH_SPECIFIC_FILES=$(ls $ROCBLAS_LIB_SRC | grep -E $ARCH)
+    OTHER_FILES=$(ls $ROCBLAS_LIB_SRC | grep -v gfx)
+    ROCBLAS_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
+    
+    # hipblaslt library files
+    HIPBLASLT_LIB_SRC=$ROCM_HOME/lib/hipblaslt/library
+    HIPBLASLT_LIB_DST=lib/hipblaslt/library
+    ARCH_SPECIFIC_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -E $ARCH)
+    OTHER_FILES=$(ls $HIPBLASLT_LIB_SRC | grep -v gfx)
+    HIPBLASLT_LIB_FILES=($ARCH_SPECIFIC_FILES $OTHER_FILES)
+
+    # Gather file paths for the full set
+    ROCM_SO_PATHS_HEAVYWEIGHT=()
+    for lib in "${HEAVYWEIGHT_ROCM_SO_FILES[@]}"; do
+        file_path=($(find $ROCM_HOME/lib/ -name "$lib"))
+        if [[ -z $file_path && -d "$ROCM_HOME/lib64" ]]; then
             file_path=($(find $ROCM_HOME/lib64/ -name "$lib")) # Then search in lib64
         fi
-    fi
-    if [[ -z $file_path ]]; then
-        file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
-    fi
-    if [[ -z $file_path ]]; then
-        echo "Error: Library file $lib is not found." >&2
-        exit 1
-    fi
-    ROCM_SO_PATHS[${#ROCM_SO_PATHS[@]}]="$file_path" # Append lib to array
-done
+        if [[ -z $file_path ]]; then
+            file_path=($(find $ROCM_HOME/ -name "$lib")) # Then search in ROCM_HOME
+        fi
+        if [[ -z $file_path ]]; then
+            echo "Error: Heavyweight library $lib not found." >&2
+            exit 1
+        fi
+	ROCM_SO_PATHS_HEAVYWEIGHT[${#ROCM_SO_PATHS_HEAVYWEIGHT[@]}]="$file_path" # Append lib to array
+    done
 
-DEPS_LIST=(
-    ${ROCM_SO_PATHS[*]}
-)
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
-    DEPS_LIST+=(${OS_SO_PATHS[*]})
-fi
-DEPS_SONAME=(
-    ${ROCM_SO_FILES[*]}
-)
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
+    DEPS_LIST=(${ROCM_SO_PATHS_HEAVYWEIGHT[*]})
+    DEPS_SONAME=(${HEAVYWEIGHT_ROCM_SO_FILES[*]})
+    # Add OS libraries
     DEPS_SONAME+=(${OS_SO_FILES[*]})
-fi
 
-DEPS_AUX_SRCLIST=()
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
+    DEPS_AUX_SRCLIST=()
     DEPS_AUX_SRCLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_SRC/}")
     DEPS_AUX_SRCLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_SRC/}")
     DEPS_AUX_SRCLIST+=("/opt/amdgpu/share/libdrm/amdgpu.ids")
-fi
 
-DEPS_AUX_DSTLIST=()
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
+    DEPS_AUX_DSTLIST=()
     DEPS_AUX_DSTLIST+=("${ROCBLAS_LIB_FILES[@]/#/$ROCBLAS_LIB_DST/}")
     DEPS_AUX_DSTLIST+=("${HIPBLASLT_LIB_FILES[@]/#/$HIPBLASLT_LIB_DST/}")
     DEPS_AUX_DSTLIST+=("share/libdrm/amdgpu.ids")
-fi
-if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
     if [[ $ROCM_INT -ge 50500 ]]; then
         # MIOpen library files
         MIOPEN_SHARE_SRC=$ROCM_HOME/share/miopen/db
@@ -297,10 +311,27 @@ if [[ "$BUILD_LIGHTWEIGHT" != "1" ]]; then
         DEPS_AUX_SRCLIST+=(${RCCL_SHARE_FILES[@]/#/$RCCL_SHARE_SRC/})
         DEPS_AUX_DSTLIST+=(${RCCL_SHARE_FILES[@]/#/$RCCL_SHARE_DST/})
     fi
-fi
+
+    # Finally, source the main build script
+    SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+    if [[ -z "$BUILD_PYTHONLESS" ]]; then
+        BUILD_SCRIPT=build_common.sh
+    else
+        BUILD_SCRIPT=build_libtorch.sh
+    fi
+    export WHEELNAME_MARKER=""
+    source "$SCRIPTPATH/${BUILD_SCRIPT}"
+
+    echo "=== Done building HEAVYWEIGHT variant ==="
+}
+
+################################################################################
+# Helper for version comparison
+################################################################################
 
 ver() {
-    printf "%3d%03d%03d%03d" $(echo "$1" | tr '.' ' ');
+    # Convert dotted version string "x.y.z" into zero-padded numeric for comparison
+    printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
 # Add triton install dependency
@@ -331,10 +362,19 @@ fi
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
 
+export LIGHTWEIGHT_WHEELNAME_MARKER="${LIGHTWEIGHT_WHEELNAME_MARKER}"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 if [[ -z "$BUILD_PYTHONLESS" ]]; then
-    BUILD_SCRIPT=build_common.sh
-else
-    BUILD_SCRIPT=build_libtorch.sh
+    BUILD_SCRIPT=build_torch_wheel.sh	
 fi
 source $SCRIPTPATH/${BUILD_SCRIPT}
+if [[ "$BUILD_LIGHTWEIGHT" == "1" ]]; then
+    do_lightweight_build
+fi
+
+if [[ "$BUILD_HEAVYWEIGHT" == "1" ]]; then
+    do_heavyweight_build
+fi
+
+rm -rf /tmp/$WHEELHOUSE_DIR
+
