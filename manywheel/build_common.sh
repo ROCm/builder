@@ -204,6 +204,7 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
     # replace original wheel
     rm -f $pkg
     mv $(basename $pkg) $pkg
+    # Rename wheel to reflect lightweight/heavyweight
     if [[ -n "${WHEELNAME_MARKER}" ]]; then
         # Rename wheel to match metadata in dist-info
         mv $pkg $(echo $pkg | sed -e "s/\.git/${WHEELNAME_MARKER}.git/")
