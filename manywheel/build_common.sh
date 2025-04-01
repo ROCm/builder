@@ -155,9 +155,10 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
 
     # regenerate the RECORD file with new hashes
     # record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
-    record_file=$(ls ${dist_info_dir}/RECORD)
     if [[ -n "${WHEELNAME_MARKER}" ]]; then
         record_file=$(ls ${new_dist_info_dir}/RECORD)
+    else
+        record_file=$(ls ${dist_info_dir}/RECORD)
     fi
 
     if [[ -e $record_file ]]; then
