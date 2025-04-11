@@ -276,6 +276,7 @@ do_heavyweight_build() {
     DEPS_LIST=(${ROCM_SO_PATHS_HEAVYWEIGHT[*]})
     DEPS_SONAME=(${HEAVYWEIGHT_ROCM_SO_FILES[*]})
     # Add OS libraries
+    DEPS_LIST+=(${OS_SO_PATHS[*]})
     DEPS_SONAME+=(${OS_SO_FILES[*]})
 
     DEPS_AUX_SRCLIST=()
