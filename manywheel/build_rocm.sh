@@ -332,7 +332,7 @@ do_heavyweight_build() {
 
 ver() {
     # Convert dotted version string "x.y.z" into zero-padded numeric for comparison
-    printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+    printf '%d%03d%03d%03d' $(echo "$1" | tr '.' ' ')
 }
 
 # Add triton install dependency
