@@ -13,7 +13,7 @@ SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 # so manually do the work of copying dependency libs and patchelfing
 # and fixing RECORDS entries correctly
 ######################################################################
-
+PLATFORM="manylinux2014_x86_64"
 fname_with_sha256() {
     HASH=$(sha256sum $1 | cut -c1-8)
     DIRNAME=$(dirname $1)
@@ -152,6 +152,11 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
         $PATCHELF_BIN --set-rpath ${LIB_SO_RPATH:-'$ORIGIN'} ${FORCE_RPATH:-} $sofile
         $PATCHELF_BIN --print-rpath $sofile
     done
+    # create Manylinux 2_28 tag this needs to happen before regenerate the RECORD
+    if [[ $PLATFORM == "manylinux_2_28_x86_64" ]]; then
+        wheel_file=$(basename "$pkg" | sed -e 's/-cp.*$/.dist-info\/WHEEL/g')
+        sed -i -e s#linux_x86_64#"${PLATFORM}"# $wheel_file;
+    fi
 
     # regenerate the RECORD file with new hashes
     # record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
@@ -196,6 +201,12 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
         popd
 
         popd
+    fi
+    # Rename wheel for Manylinux 2_28
+    if [[ $PLATFORM == "manylinux_2_28_x86_64" ]]; then
+        zip -rq "$(basename "$pkg" | sed -e "s#manylinux2014_x86_64#${PLATFORM}#")" "${PREFIX}"*
+    else
+        zip -rq "$(basename "$pkg")" "${PREFIX}"*
     fi
 
     # zip up the wheel back
