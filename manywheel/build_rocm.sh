@@ -149,6 +149,7 @@ do_heavyweight_build() {
         "librocsparse.so"
         "libroctracer64.so"
         "libroctx64.so"
+	"librocroller.so"
     )
     
     # Adjust list based on ROCm version
