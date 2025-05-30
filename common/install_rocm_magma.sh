@@ -23,13 +23,11 @@ esac
 MKLROOT=${MKLROOT:-/opt/intel}
 
 # "install" hipMAGMA into /opt/rocm/magma by copying after build
-git clone https://bitbucket.org/icl/magma.git
+git clone https://github.com/ROCm/utk-magma.git -b release/2.9.0_rocm70 magma
 pushd magma
-if [[ $PYTORCH_BRANCH == "release/1.10.1" ]]; then
-    git checkout magma_ctrl_launch_bounds
-else
-    git checkout a1625ff4d9bc362906bd01f805dbbe12612953f6
-fi
+# version 2.9 + ROCm 7.0 related updates
+git checkout 91c4f720a17e842b364e9de41edeef76995eb9ad
+
 cp make.inc-examples/make.inc.hip-gcc-mkl make.inc
 echo 'LIBDIR += -L$(MKLROOT)/lib' >> make.inc
 # TODO (1)
