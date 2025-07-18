@@ -13,7 +13,7 @@ SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 # so manually do the work of copying dependency libs and patchelfing
 # and fixing RECORDS entries correctly
 ######################################################################
-
+PLATFORM="manylinux_2_28_x86_64"
 fname_with_sha256() {
     HASH=$(sha256sum $1 | cut -c1-8)
     DIRNAME=$(dirname $1)
@@ -152,6 +152,16 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
         $PATCHELF_BIN --set-rpath ${LIB_SO_RPATH:-'$ORIGIN'} ${FORCE_RPATH:-} $sofile
         $PATCHELF_BIN --print-rpath $sofile
     done
+    # create Manylinux 2_28 tag this needs to happen before regenerate the RECORD
+    if [[ "$PLATFORM" == "manylinux_2_28_x86_64" ]]; then
+        # Pick the right WHEEL file, even when the dist-info dir was renamed
+        if [[ -n "${WHEELNAME_MARKER}" ]]; then
+            wheel_file="${new_dist_info_dir}/WHEEL"
+        else
+            wheel_file=$(basename "$pkg" | sed -e 's/-cp.*$/.dist-info\/WHEEL/')
+        fi
+        sed -i -e "s#linux_x86_64#${PLATFORM}#" "$wheel_file"
+    fi
 
     # regenerate the RECORD file with new hashes
     # record_file=$(echo $(basename $pkg) | sed -e 's/-cp.*$/.dist-info\/RECORD/g')
@@ -197,13 +207,20 @@ for pkg in /$WHEELHOUSE_DIR/torch_no_python*.whl /$WHEELHOUSE_DIR/${WHEELNAME_MA
 
         popd
     fi
+    # Rename wheel for Manylinux 2_28
+    if [[ "$PLATFORM" == "manylinux_2_28_x86_64" ]]; then
+        new_pkg=$(echo "$pkg" | sed "s#linux_x86_64#${PLATFORM}#")
+        if [[ "$pkg" != "$new_pkg" ]]; then
+            pkg="$new_pkg"  
+        fi
+    fi
 
-    # zip up the wheel back
-    zip -rq $(basename $pkg) $PREIX*
+    # Re-zip the edited tree into the wheel
+    zip -rq "$(basename "$pkg")" "${PREFIX}"*
 
-    # replace original wheel
-    rm -f $pkg
-    mv $(basename $pkg) $pkg
+    # Replace the original wheel with the one we just built
+    rm -f "$pkg"
+    mv "$(basename "$pkg")" "$pkg"
     # Rename wheel to reflect lightweight/heavyweight
     if [[ -n "${WHEELNAME_MARKER}" ]]; then
         # Rename wheel to match metadata in dist-info
