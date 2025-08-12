@@ -355,20 +355,18 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
             TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt")
         fi
         	TRITON_VERSION=$(cat "$PYTORCH_ROOT/.ci/docker/triton_version.txt")
-
         # Only linux Python < 3.13 are supported wheels for triton
         TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
-
         # Use "triton" for dev builds, else "pytorch-triton-rocm"
         if [[ "$PYTORCH_VERSION" == *".dev0a0"* ]]; then
             PKG="triton"
         else
             PKG="pytorch-triton-rocm"
         fi
-
-        REQ="${PKG}==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
-
-        if [[ -z "$PYTORCH_EXTRA_INSTALL_REQUIREMENTS" ]]; then
+        
+		REQ="${PKG}==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
+        
+		if [[ -z "$PYTORCH_EXTRA_INSTALL_REQUIREMENTS" ]]; then
             export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${REQ}"
         else
             export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${PYTORCH_EXTRA_INSTALL_REQUIREMENTS} | ${REQ}"
