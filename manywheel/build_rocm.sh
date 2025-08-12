@@ -348,23 +348,35 @@ ver() {
 # Assuming PYTORCH_VERSION=x.y.z, if x >= 2
 if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
     if [[ $(uname) == "Linux" ]] && [[ "$DESIRED_PYTHON" != "3.12" || $(ver $PYTORCH_VERSION) -ge $(ver 2.4) ]]; then
-	# Triton commit got unified in PyTorch 2.5
-	if [[ $(ver $PYTORCH_VERSION) -ge $(ver 2.5) ]]; then
-            TRITON_SHORTHASH=$(cut -c1-8 $PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton.txt)
-	else
-            TRITON_SHORTHASH=$(cut -c1-8 $PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt)
-	fi
-        TRITON_VERSION=$(cat $PYTORCH_ROOT/.ci/docker/triton_version.txt)
-	# Only linux Python < 3.13 are supported wheels for triton
-	TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
+        # Triton commit got unified in PyTorch 2.5
+        if [[ $(ver $PYTORCH_VERSION) -ge $(ver 2.5) ]]; then
+            TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton.txt")
+        else
+            TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt")
+        fi
+        TRITON_VERSION=$(cat "$PYTORCH_ROOT/.ci/docker/triton_version.txt")
+
+        # Only linux Python < 3.13 are supported wheels for triton
+        TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
+
+        # Use "triton" for dev builds, else "pytorch-triton-rocm"
+        if [[ "$PYTORCH_VERSION" == *".dev0a0"* ]]; then
+            PKG="triton"
+        else
+            PKG="pytorch-triton-rocm"
+        fi
+
+        REQ="${PKG}==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
 
         if [[ -z "$PYTORCH_EXTRA_INSTALL_REQUIREMENTS" ]]; then
-            export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="triton==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
+            export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${REQ}"
         else
-            export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${PYTORCH_EXTRA_INSTALL_REQUIREMENTS} | triton==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
+            export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${PYTORCH_EXTRA_INSTALL_REQUIREMENTS} | ${REQ}"
         fi
+        unset PKG REQ
     fi
 fi
+
 
 
 echo "PYTORCH_ROCM_ARCH: ${PYTORCH_ROCM_ARCH}"
