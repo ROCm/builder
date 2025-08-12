@@ -354,7 +354,7 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
         else
             TRITON_SHORTHASH=$(cut -c1-8 "$PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt")
         fi
-        TRITON_VERSION=$(cat "$PYTORCH_ROOT/.ci/docker/triton_version.txt")
+        	TRITON_VERSION=$(cat "$PYTORCH_ROOT/.ci/docker/triton_version.txt")
 
         # Only linux Python < 3.13 are supported wheels for triton
         TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
