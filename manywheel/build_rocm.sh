@@ -358,7 +358,7 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
         # Only linux Python < 3.13 are supported wheels for triton
         TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
         # Use "triton" for dev builds, else "pytorch-triton-rocm"
-        if [[ "$PYTORCH_VERSION" == *".dev0a0"* ]]; then
+        if [[ "$PYTORCH_VERSION_FULL" == *".0a0"* ]]; then
             PKG="triton"
         else
             PKG="pytorch-triton-rocm"
