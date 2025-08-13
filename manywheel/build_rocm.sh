@@ -75,7 +75,7 @@ ROCM_VERSION_WITH_PATCH=rocm${ROCM_VERSION_MAJOR}.${ROCM_VERSION_MINOR}.${ROCM_V
 ROCM_INT=$(($ROCM_VERSION_MAJOR * 10000 + $ROCM_VERSION_MINOR * 100 + $ROCM_VERSION_PATCH))
 
 PYTORCH_VERSION=$(cat $PYTORCH_ROOT/version.txt | grep -oP "[0-9]+\.[0-9]+\.[0-9]+")
-
+PYTORCH_VERSION_FULL=$(cat "$PYTORCH_ROOT/version.txt")
 do_lightweight_build() {
     echo "=== Building LIGHTWEIGHT variant ==="
 
