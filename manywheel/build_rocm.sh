@@ -3,7 +3,6 @@
 set -ex
 
 export ROCM_HOME=/opt/rocm
-export MAGMA_HOME=$ROCM_HOME/magma
 # TODO: libtorch_cpu.so is broken when building with Debug info
 export BUILD_DEBUG_INFO=0
 
@@ -82,7 +81,6 @@ do_lightweight_build() {
     # ROCm library files
     LIGHTWEIGHT_ROCM_SO_FILES=(
         # Minimal set for lightweight
-        "libmagma.so"
     )
 
     # First, gather actual file paths for the minimal set
@@ -141,7 +139,6 @@ do_heavyweight_build() {
         "libhsa-runtime64.so"
         "libhiprtc.so"
         "libamd_comgr.so"
-        "libmagma.so"
         "librccl.so"
         "librocblas.so"
         "librocfft.so"
