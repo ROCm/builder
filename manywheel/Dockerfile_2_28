@@ -91,10 +91,10 @@ RUN yum install -y \
         gcc-toolset-${DEVTOOLSET_VERSION}-toolchain \
         glibc-langpack-en
 
-# ius-release package needs epel-release-7
-RUN yum install -y \
-    https://repo.ius.io/ius-release-el7.rpm \
-    https://ossci-linux.s3.amazonaws.com/epel-release-7-14.noarch.rpm
+RUN dnf -y module reset git && \
+    dnf -y module enable git:2.39 && \
+    dnf -y install git && dnf clean all
+RUN git config --global --add safe.directory "*"
 #Stopped working as of 8/1 (due to CentOS EOL?)
 #    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum swap -y git git236-core
