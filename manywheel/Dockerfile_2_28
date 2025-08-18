@@ -7,8 +7,8 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
-ARG DEVTOOLSET_VERSION=11
-RUN yum install -y wget curl perl util-linux xz bzip2 git patch which perl zlib-devel yum-utils gcc-toolset-${DEVTOOLSET_VERSION}-toolchain
+ARG DEVTOOLSET_VERSION=13
+RUN yum install -y sudo wget curl perl util-linux xz bzip2 git patch which perl zlib-devel yum-utils gcc-toolset-${DEVTOOLSET_VERSION}-gcc gcc-toolset-${DEVTOOLSET_VERSION}-gcc-c++ gcc-toolset-${DEVTOOLSET_VERSION}-gcc-gfortran gcc-toolset-${DEVTOOLSET_VERSION}-gdb
 ENV PATH=/opt/rh/gcc-toolset-${DEVTOOLSET_VERSION}/root/usr/bin:$PATH
 ENV LD_LIBRARY_PATH=/opt/rh/gcc-toolset-${DEVTOOLSET_VERSION}/root/usr/lib64:/opt/rh/gcc-toolset-${DEVTOOLSET_VERSION}/root/usr/lib:$LD_LIBRARY_PATH
 # Install setuptools and wheel for python 3.12/3.13
@@ -65,7 +65,7 @@ ADD ./common/install_libpng.sh install_libpng.sh
 RUN bash ./install_libpng.sh && rm install_libpng.sh
 
 FROM ${GPU_IMAGE} as common
-ARG DEVTOOLSET_VERSION=11
+ARG DEVTOOLSET_VERSION=13
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
@@ -88,16 +88,14 @@ RUN yum install -y \
         wget \
         which \
         xz \
-        gcc-toolset-${DEVTOOLSET_VERSION}-toolchain \
-        glibc-langpack-en
-
-# ius-release package needs epel-release-7
-RUN yum install -y \
-    https://repo.ius.io/ius-release-el7.rpm \
-    https://ossci-linux.s3.amazonaws.com/epel-release-7-14.noarch.rpm
+        glibc-langpack-en \
+        gcc-toolset-${DEVTOOLSET_VERSION}-gcc \
+        gcc-toolset-${DEVTOOLSET_VERSION}-gcc-c++ \
+        gcc-toolset-${DEVTOOLSET_VERSION}-gcc-gfortran \
+        gcc-toolset-${DEVTOOLSET_VERSION}-gdb
 #Stopped working as of 8/1 (due to CentOS EOL?)
 #    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum swap -y git git236-core
+
 # git236+ would refuse to run git commands in repos owned by other users
 # Which causes version check to fail, as pytorch repo is bind-mounted into the image
 # Override this behaviour by treating every folder as safe
@@ -122,7 +120,7 @@ COPY --from=jni                /usr/local/include/jni.h              /usr/local/
 
 FROM common as cpu_final
 ARG BASE_CUDA_VERSION=11.8
-ARG DEVTOOLSET_VERSION=11
+ARG DEVTOOLSET_VERSION=13
 # Install Anaconda
 ADD ./common/install_conda_docker.sh install_conda.sh
 RUN bash ./install_conda.sh && rm install_conda.sh
