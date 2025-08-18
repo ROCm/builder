@@ -96,7 +96,7 @@ RUN yum install -y \
     https://vault.ius.io/el7/x86_64/packages/i/ius-release-2-1.el7.ius.noarch.rpm \
     https://ossci-linux.s3.amazonaws.com/epel-release-7-14.noarch.rpm && \
     ls -lrt /etc/yum.repos.d/ && \
-    grep -nir "repo.ius.io" . 
+    grep -nir "repo.ius.io" /etc/yum.repos.d/*
 #Stopped working as of 8/1 (due to CentOS EOL?)
 #    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum swap -y git git236-core
