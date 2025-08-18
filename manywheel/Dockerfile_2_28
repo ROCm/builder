@@ -93,7 +93,7 @@ RUN yum install -y \
 
 # ius-release package needs epel-release-7
 RUN yum install -y \
-    https://repo.ius.io/ius-release-el7.rpm \
+    https://vault.ius.io/el7/x86_64/packages/i/ius-release-2-1.el7.ius.noarch.rpm \
     https://ossci-linux.s3.amazonaws.com/epel-release-7-14.noarch.rpm
 #Stopped working as of 8/1 (due to CentOS EOL?)
 #    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
