@@ -151,7 +151,7 @@ do_heavyweight_build() {
         "librocsparse.so"
         "libroctracer64.so"
         "libroctx64.so"
-	"librocroller.so"
+		"librocroller.so"
     )
     
     # Adjust list based on ROCm version
@@ -164,6 +164,7 @@ do_heavyweight_build() {
 
     if [[ $(ver $PYTORCH_VERSION) -ge $(ver 2.8) ]]; then
         HEAVYWEIGHT_ROCM_SO_FILES+=("libhipsparselt.so")
+	HEAVYWEIGHT_ROCM_SO_FILES+=("librocprofiler-sdk.so")
     fi
     
     
