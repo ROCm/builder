@@ -92,7 +92,8 @@ RUN yum install -y \
         glibc-langpack-en
 
 # ius-release package needs epel-release-7
-RUN yum install -y \
+RUN ls -lrt /etc/yum.repos.d/ && \
+    yum install -y \
     https://vault.ius.io/el7/x86_64/packages/i/ius-release-2-1.el7.ius.noarch.rpm \
     https://ossci-linux.s3.amazonaws.com/epel-release-7-14.noarch.rpm
 #Stopped working as of 8/1 (due to CentOS EOL?)
