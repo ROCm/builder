@@ -130,6 +130,7 @@ fi
 #######################################################
 
 pushd "$PYTORCH_ROOT"
+pip install -r requirements.txt
 python setup.py clean
 retry pip install -r requirements.txt
 
