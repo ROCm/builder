@@ -130,8 +130,8 @@ fi
 #######################################################
 
 pushd "$PYTORCH_ROOT"
+pip install -r requirements.txt
 python setup.py clean
-retry pip install -r requirements.txt
 
 # ROCm RHEL8 packages are built with cxx11 abi symbols
 if [[ "$DESIRED_DEVTOOLSET" == *"cxx11-abi"* || "$DESIRED_CUDA" == *"rocm"* ]]; then
