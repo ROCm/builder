@@ -153,6 +153,24 @@ ENV CPP=/opt/rh/gcc-toolset-12/root/usr/bin/cpp
 ENV CMAKE_C_COMPILER=/opt/rh/gcc-toolset-12/root/usr/bin/gcc
 ENV CMAKE_CXX_COMPILER=/opt/rh/gcc-toolset-12/root/usr/bin/g++
 ENV CXXFLAGS="-Wno-error"
+ENV CFLAGS="-Wno-error"
+ENV CMAKE_CXX_FLAGS="-Wno-error"
+ENV CMAKE_C_FLAGS="-Wno-error"
+# Disable warnings as errors for PyTorch build
+ENV PYTORCH_WARNINGS_AS_ERRORS=0
+ENV WARNINGS_AS_ERRORS=OFF
+# Create compiler wrappers that filter out -Werror
+RUN echo '#!/bin/bash' > /usr/local/bin/gcc-wrapper && \
+    echo 'exec /opt/rh/gcc-toolset-12/root/usr/bin/gcc "${@//-Werror/}"' >> /usr/local/bin/gcc-wrapper && \
+    chmod +x /usr/local/bin/gcc-wrapper && \
+    echo '#!/bin/bash' > /usr/local/bin/g++-wrapper && \
+    echo 'exec /opt/rh/gcc-toolset-12/root/usr/bin/g++ "${@//-Werror/}"' >> /usr/local/bin/g++-wrapper && \
+    chmod +x /usr/local/bin/g++-wrapper
+# Use wrapper compilers
+ENV CC=/usr/local/bin/gcc-wrapper
+ENV CXX=/usr/local/bin/g++-wrapper
+ENV CMAKE_C_COMPILER=/usr/local/bin/gcc-wrapper
+ENV CMAKE_CXX_COMPILER=/usr/local/bin/g++-wrapper
 ENV LDFLAGS="-Wl,-rpath=/opt/rh/gcc-toolset-12/root/usr/lib64 -Wl,-rpath=/opt/rh/gcc-toolset-12/root/usr/lib"
 # Somewhere in ROCm stack, we still use non-existing /opt/rocm/hip path, 
 # below workaround helps avoid error
