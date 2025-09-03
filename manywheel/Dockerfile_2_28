@@ -152,6 +152,7 @@ ENV CXX=/opt/rh/gcc-toolset-12/root/usr/bin/g++
 ENV CPP=/opt/rh/gcc-toolset-12/root/usr/bin/cpp
 ENV CMAKE_C_COMPILER=/opt/rh/gcc-toolset-12/root/usr/bin/gcc
 ENV CMAKE_CXX_COMPILER=/opt/rh/gcc-toolset-12/root/usr/bin/g++
+ENV CXXFLAGS="-Wno-maybe-uninitialized"
 ENV LDFLAGS="-Wl,-rpath=/opt/rh/gcc-toolset-12/root/usr/lib64 -Wl,-rpath=/opt/rh/gcc-toolset-12/root/usr/lib"
 # Somewhere in ROCm stack, we still use non-existing /opt/rocm/hip path, 
 # below workaround helps avoid error
