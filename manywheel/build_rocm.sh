@@ -358,7 +358,7 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
         TRITON_CONSTRAINT="platform_system == 'Linux' and platform_machine == 'x86_64'$(if [[ $(ver "$PYTORCH_VERSION") -le $(ver "2.5") ]]; then echo " and python_version < '3.13'"; fi)"
         # Use "triton" for dev builds, else "pytorch-triton-rocm"
 		# Temp: Currently enabling for rocm7.1_internal_testing branch only but plan to expand it to other branches
-        if [[ "$PYTORCH_VERSION_FULL" -ge $(ver 2.8) ]]; then
+        if [[ $(ver "$PYTORCH_VERSION") -ge $(ver "2.8") ]]; then
             PKG="triton"
         else
             PKG="pytorch-triton-rocm"
