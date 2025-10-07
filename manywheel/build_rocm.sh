@@ -355,7 +355,7 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
 	            TRITON_SHORTHASH=$(cut -c1-8 $PYTORCH_ROOT/.ci/docker/ci_commit_pins/triton-rocm.txt)
 	        fi
 		else
-			TRITON_SHORTHASH=$TRITON_COMMIT
+			TRITON_SHORTHASH=${TRITON_COMMIT:0:8}
 		fi
 		
         TRITON_VERSION=$(cat $PYTORCH_ROOT/.ci/docker/triton_version.txt)
