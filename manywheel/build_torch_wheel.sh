@@ -141,6 +141,7 @@ else
 fi
 
 if [[ "$DESIRED_CUDA" == *"rocm"* ]]; then
+    git submodule sync; git submodule update --init --recursive
     echo "Calling build_amd.py at $(date)"
     python tools/amd_build/build_amd.py
 fi
