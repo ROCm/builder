@@ -130,6 +130,7 @@ fi
 #######################################################
 
 pushd "$PYTORCH_ROOT"
+git submodule sync; git submodule update --init --recursive
 pip install -r requirements.txt
 python setup.py clean
 
@@ -141,7 +142,6 @@ else
 fi
 
 if [[ "$DESIRED_CUDA" == *"rocm"* ]]; then
-    git submodule sync; git submodule update --init --recursive
     echo "Calling build_amd.py at $(date)"
     python tools/amd_build/build_amd.py
 fi
