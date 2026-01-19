@@ -370,7 +370,7 @@ if [ ${PYTORCH_VERSION%%\.*} -ge 2 ]; then
             PKG="pytorch-triton-rocm"
         fi
         
-		REQ="${PKG}==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}.git${TRITON_SHORTHASH}; ${TRITON_CONSTRAINT}"
+		REQ="${PKG}==${TRITON_VERSION}+${ROCM_VERSION_WITH_PATCH}; ${TRITON_CONSTRAINT}"
         
 		if [[ -z "$PYTORCH_EXTRA_INSTALL_REQUIREMENTS" ]]; then
             export PYTORCH_EXTRA_INSTALL_REQUIREMENTS="${REQ}"
