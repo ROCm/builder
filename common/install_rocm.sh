@@ -41,8 +41,7 @@ install_ubuntu() {
     apt-get update --allow-insecure-repositories
 
     DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated \
-                   rocm-dev \
-                   rocm-libs
+                   rocm-dev
 
     # TODO (2)
     ## precompiled miopen kernels added in ROCm 3.5; search for all unversioned packages
@@ -90,8 +89,7 @@ install_centos() {
   yum update -y
 
   yum install -y \
-                   rocm-dev \
-                   rocm-libs
+                   rocm-dev
 
   # Cleanup
   yum clean all
