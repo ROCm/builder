@@ -128,6 +128,7 @@ ENV LD_LIBRARY_PATH=/opt/rh/gcc-toolset-${DEVTOOLSET_VERSION}/root/usr/lib64:/op
 
 # cmake-3.28.4 from pip; force in case cmake3 already exists
 RUN yum install -y python3-pip && \
+    python3 -m pip install --upgrade pip && \
     python3 -mpip install cmake==3.28.4 && \
     ln -sf /usr/local/bin/cmake /usr/bin/cmake3
 
